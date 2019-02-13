@@ -1,7 +1,7 @@
-<PROJECT_NAME>
+ambulo
 ==============================
 
-<SHORT_DESCRIPTION>
+Automatic Differentiation with Python
 
 Contents
 --------
@@ -9,7 +9,7 @@ Contents
 .. toctree::
     :maxdepth: 3
 
-    <MODULE_NAME>
+    ambulo
     releases
 
 
