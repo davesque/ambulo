@@ -182,7 +182,7 @@ class Mul(Binary):
     op_str = ' * '
 
     def df(self, x, y, dx, dy):
-        return x * dy + y * dx
+        return x * dy + dx * y
 
 
 class Div(Binary):
@@ -190,4 +190,4 @@ class Div(Binary):
     op_str = ' / '
 
     def df(self, x, y, dx, dy):
-        return (y * dx - x * dy) / (y * y)
+        return (dx * y - x * dy) / (y * y)
