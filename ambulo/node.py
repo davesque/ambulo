@@ -75,6 +75,18 @@ class BaseNode(abc.ABC):
     def back(self, env: Env) -> Number:
         pass
 
+    def back_(self, env) -> Number:
+        label = self.label
+        if env.has_delta(label):
+            return env.get_delta(label)
+
+        deltas_ = (o.df_di(env, self) for o in self.outputs)
+
+        delta = sum(deltas_)
+        env.set_delta(label, delta)
+
+        return delta
+
     def __str__(self) -> str:
         return self.label
 
@@ -138,26 +150,14 @@ class Node(BaseNode):
 
         return delta
 
-    def back(self, env) -> Tuple[Number, ...]:
-        label = self.label
-        if env.has_delta(label):
-            return env.get_delta(label)
+    def df_di(self, env, input) -> Number:
+        inputs_ = (i.eval(env) for i in self.inputs)
+        delta_ = self.back_(env)
 
-        inputs_ = tuple(i.eval(env) for i in self.inputs)
-        delta_vecs = (o.back(env) for o in self.outputs)
-        delta_idcs = (o.inputs.index(self) for o in self.outputs)
-        deltas_ = (vec[i] for vec, i in zip(delta_vecs, delta_idcs))
-
-        d = sum(deltas_)
+        i = self.inputs.index(input)
         n = len(self.inputs)
-        deltas = tuple(
-            self.df(*inputs_, *one_hot_vec(d, i, n))
-            for i in range(n)
-        )
 
-        env.set_delta(label, deltas)
-
-        return deltas
+        return self.df(*inputs_, *one_hot_vec(delta_, i, n))
 
     @property
     def arity(self) -> int:
@@ -190,20 +190,6 @@ class Var(BaseNode):
 
     def frwd(self, env: Env) -> Number:
         return env.get_delta(self.label)
-
-    def back(self, env: Env) -> Tuple[Number, ...]:
-        label = self.label
-        if env.has_delta(label):
-            return env.get_delta(label)
-
-        delta_vecs = (o.back(env) for o in self.outputs)
-        delta_idcs = (o.inputs.index(self) for o in self.outputs)
-        deltas_ = (vec[i] for vec, i in zip(delta_vecs, delta_idcs))
-
-        deltas = (sum(deltas_),)
-        env.set_delta(label, deltas)
-
-        return deltas
 
 
 class Id(Node):
