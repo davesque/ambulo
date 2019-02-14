@@ -144,9 +144,9 @@ class Node(BaseNode):
             return env.get_delta(label)
 
         inputs_ = tuple(i.eval(env) for i in self.inputs)
-        delta_vecs = tuple(o.back(env) for o in self.outputs)
-        delta_idcs = tuple(o.inputs.index(self) for o in self.outputs)
-        deltas_ = tuple(vec[i] for vec, i in zip(delta_vecs, delta_idcs))
+        delta_vecs = (o.back(env) for o in self.outputs)
+        delta_idcs = (o.inputs.index(self) for o in self.outputs)
+        deltas_ = (vec[i] for vec, i in zip(delta_vecs, delta_idcs))
 
         d = sum(deltas_)
         n = len(self.inputs)
