@@ -138,7 +138,7 @@ class Node(BaseNode):
 
         return delta
 
-    def back(self, env):
+    def back(self, env) -> Tuple[Number, ...]:
         label = self.label
         if env.has_delta(label):
             return env.get_delta(label)
@@ -191,7 +191,7 @@ class Var(BaseNode):
     def frwd(self, env: Env) -> Number:
         return env.get_delta(self.label)
 
-    def back(self, env: Env) -> Number:
+    def back(self, env: Env) -> Tuple[Number, ...]:
         label = self.label
         if env.has_delta(label):
             return env.get_delta(label)
@@ -207,7 +207,7 @@ class Var(BaseNode):
 
 
 class Id(Node):
-    def back(self, env):
+    def back(self, env) -> Tuple[Number, ...]:
         if len(self.outputs) == 0:
             return (env.get_delta(self.label),)
 
