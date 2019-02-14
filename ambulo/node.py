@@ -1,4 +1,5 @@
 import abc
+import functools
 import math
 import operator
 from typing import (
@@ -18,6 +19,39 @@ Name = str
 Env = Dict[Name, Number]
 ValEnv = Dict[Name, 'Val']
 MixEnv = Dict[Name, Union['Val', Number, Tuple[Number, Number]]]
+
+
+class cache:
+    def __init__(self, method):
+        self.method = method
+        self.cache_attr = f'_{method.__name__}_cache'
+
+    def __get__(self, obj=None, objtype=None):
+        if obj is None:
+            return self.method
+
+        old_method = self.method
+        cache_attr = self.cache_attr
+
+        @functools.wraps(old_method)
+        def new_method(*args, **kwargs):
+            if hasattr(obj, cache_attr):
+                return getattr(obj, cache_attr)
+
+            cache_val = old_method(obj, *args, **kwargs)
+            setattr(obj, cache_attr, cache_val)
+
+            return cache_val
+
+        def clear_cache():
+            try:
+                delattr(obj, cache_attr)
+            except AttributeError:
+                pass
+
+        new_method.clear_cache = clear_cache
+
+        return new_method
 
 
 class Val(NamedTuple):
@@ -42,6 +76,20 @@ def to_valenv(env: MixEnv) -> ValEnv:
             valenv[k] = Val(v, 0)
 
     return valenv
+
+
+def to_env(mixenv: MixEnv) -> Env:
+    env: Env = {}
+
+    for k, v in mixenv.items():
+        if isinstance(v, tuple):
+            env[k] = v[0]
+        elif isinstance(v, Val):
+            env[k] = v[0]
+        else:
+            env[k] = v
+
+    return env
 
 
 class BaseNode(abc.ABC):
@@ -116,6 +164,14 @@ class Node(BaseNode):
 
         return Val(self.f(*vs), self.df(*vs, *dvs))
 
+    def back(self, **env):
+        inputs = tuple(inp.eval(**env) for inp in self.inputs)
+
+        out_indices = tuple(out.inputs.index(self) for out in self.outputs)
+        vo_bars = tuple(out.back(**env)[i] for i, out in zip(out_indices, self.outputs))
+
+        return self.di(*inputs, *vo_bars)
+
     @property
     def arity(self) -> int:
         return len(self.inputs)
@@ -156,11 +212,24 @@ class Var(BaseNode):
 
 
 class Id(Node):
+    def back(self, **env):
+        if len(self.outputs) == 0:
+            try:
+                return [env[self.name]]
+            except KeyError:
+                raise VarError(f'Cannot evaluate output variable "{self}"')
+
+        return super().back(**env)
+
     def f(self, x):
         return x
 
     def df(self, x, dx):
         return dx
+
+    def di(self, x, *vo_bars):
+        v_bar = sum(vo_bars)
+        return [v_bar]
 
     @property
     def name_expr(self):
@@ -195,6 +264,10 @@ class Ln(Unary):
     def df(self, x, dx):
         return dx / x
 
+    def di(self, x, *vo_bars):
+        v_bar = sum(vo_bars)
+        return [v_bar / x]
+
 
 class Sin(Unary):
     op = staticmethod(math.sin)
@@ -202,6 +275,10 @@ class Sin(Unary):
 
     def df(self, x, dx):
         return math.cos(x) * dx
+
+    def di(self, x, *vo_bars):
+        v_bar = sum(vo_bars)
+        return [v_bar * math.cos(x)]
 
 
 class Binary(Node):
@@ -235,6 +312,10 @@ class Add(Binary):
     def df(self, x, y, dx, dy):
         return dx + dy
 
+    def di(self, x, y, *vo_bars):
+        v_bar = sum(vo_bars)
+        return [v_bar, v_bar]
+
 
 class Sub(Binary):
     op = staticmethod(operator.sub)
@@ -242,6 +323,10 @@ class Sub(Binary):
 
     def df(self, x, y, dx, dy):
         return dx - dy
+
+    def di(self, x, y, *vo_bars):
+        v_bar = sum(vo_bars)
+        return [v_bar, -v_bar]
 
 
 class Mul(Binary):
@@ -253,10 +338,18 @@ class Mul(Binary):
     def df(self, x, y, dx, dy):
         return x * dy + dx * y
 
+    def di(self, x, y, *vo_bars):
+        v_bar = sum(vo_bars)
+        return [y * v_bar, x * v_bar]
+
 
 class Div(Binary):
     op = staticmethod(operator.truediv)
     op_str = ' / '
 
     def df(self, x, y, dx, dy):
-        return (dx * y - x * dy) / (y * y)
+        return (dx * y - x * dy) / y ** 2
+
+    def di(self, x, y, *vo_bars):
+        v_bar = sum(vo_bars)
+        return [v_bar / y, v_bar * (-x / y ** 2)]
