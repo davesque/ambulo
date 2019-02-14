@@ -1,120 +1,78 @@
 import abc
-import functools
 import math
 import operator
+import pprint
 from typing import (
     Dict,
     List,
-    NamedTuple,
     Optional,
     Tuple,
     Union,
 )
 
 
+Label = str
 Number = Union[float, int]
-
-Name = str
-
-Env = Dict[Name, Number]
-ValEnv = Dict[Name, 'Val']
-MixEnv = Dict[Name, Union['Val', Number, Tuple[Number, Number]]]
+Workspace = Dict[Label, Number]
 
 
-class cache:
-    def __init__(self, method):
-        self.method = method
-        self.cache_attr = f'_{method.__name__}_cache'
+class Env:
+    values: Workspace
+    deltas: Workspace
 
-    def __get__(self, obj=None, objtype=None):
-        if obj is None:
-            return self.method
+    def __init__(self, values: Optional[Workspace]=None, deltas: Optional[Workspace]=None):
+        self.values = values or {}
+        self.deltas = deltas or {}
 
-        old_method = self.method
-        cache_attr = self.cache_attr
+    def set_value(self, label, value):
+        self.values[label] = value
 
-        @functools.wraps(old_method)
-        def new_method(*args, **kwargs):
-            if hasattr(obj, cache_attr):
-                return getattr(obj, cache_attr)
+    def set_delta(self, label, delta):
+        self.deltas[label] = delta
 
-            cache_val = old_method(obj, *args, **kwargs)
-            setattr(obj, cache_attr, cache_val)
+    def get_value(self, label: Label) -> Number:
+        return self.values[label]
 
-            return cache_val
+    def get_delta(self, label: Label) -> Number:
+        return self.deltas[label]
 
-        def clear_cache():
-            try:
-                delattr(obj, cache_attr)
-            except AttributeError:
-                pass
+    def has_value(self, label: Label) -> bool:
+        return label in self.values
 
-        new_method.clear_cache = clear_cache
+    def has_delta(self, label: Label) -> bool:
+        return label in self.deltas
 
-        return new_method
+    def __repr__(self):
+        values = pprint.pformat(self.values)
+        deltas = pprint.pformat(self.deltas)
 
-
-class Val(NamedTuple):
-    v: Optional[Number]
-    dv: Optional[Number]
-
-    @classmethod
-    def from_tuple(cls, t: Tuple[Number, Number]) -> 'Val':
-        if not isinstance(t, tuple) or len(t) != 2:
-            raise ValueError('Val instances can only be created from 2-tuples')
-
-        return cls(*t)
-
-
-def to_valenv(env: MixEnv) -> ValEnv:
-    valenv: ValEnv = {}
-
-    for k, v in env.items():
-        if isinstance(v, tuple):
-            valenv[k] = Val.from_tuple(v)
-        else:
-            valenv[k] = Val(v, 0)
-
-    return valenv
-
-
-def to_env(mixenv: MixEnv) -> Env:
-    env: Env = {}
-
-    for k, v in mixenv.items():
-        if isinstance(v, tuple):
-            env[k] = v[0]
-        elif isinstance(v, Val):
-            env[k] = v[0]
-        else:
-            env[k] = v
-
-    return env
+        return f'Values:\n{values}\n\nDeltas:\n{deltas}'
 
 
 class BaseNode(abc.ABC):
-    name: Name
+    label: Label
     outputs: List['Node']
 
     wrap_in_parens = False
 
-    def __init__(self, name: Name):
+    def __init__(self, label: Label):
         self.outputs = []
-        self.name = name
+        self.label = label
 
     @abc.abstractmethod
-    def eval(self, **env: Env) -> Number:
+    def eval(self, env: Env) -> Number:
         pass
 
-    def fwd(self, **env: MixEnv) -> Val:
-        return self._fwd(**to_valenv(env))
+    @abc.abstractmethod
+    def frwd(self, env: Env) -> Number:
+        pass
 
     @abc.abstractmethod
-    def _fwd(self, **env: ValEnv) -> Val:
+    def back(self, env: Env) -> Number:
         pass
 
     def __str__(self) -> str:
-        return self.name
+        return self.label
 
     @property
     def name_expr(self) -> str:
@@ -143,28 +101,40 @@ class BaseNode(abc.ABC):
 class Node(BaseNode):
     inputs: Tuple['Node', ...]
 
-    def __init__(self, *inputs: Tuple['Node', ...], name=None):
+    def __init__(self, *inputs: Tuple['Node', ...], label=None):
         for i in inputs:
             i.outputs.append(self)
 
         self.inputs = inputs
         self.outputs = []
-        self.name = name
+        self.label = label
 
-    def eval(self, **env: Env) -> Number:
-        nums = (i.eval(**env) for i in self.inputs)
+    def eval(self, env: Env) -> Number:
+        label = self.label
+        if env.has_value(label):
+            return env.get_value(label)
 
-        return self.f(*nums)
+        inputs = (i.eval(env) for i in self.inputs)
 
-    def _fwd(self, **env: ValEnv) -> Val:
-        vals = tuple(i._fwd(**env) for i in self.inputs)
+        value = self.f(*inputs)
+        env.set_value(label, value)
 
-        vs = tuple(val.v for val in vals)
-        dvs = tuple(val.dv for val in vals)
+        return value
 
-        return Val(self.f(*vs), self.df(*vs, *dvs))
+    def frwd(self, env: Env) -> Number:
+        label = self.label
+        if env.has_delta(label):
+            return env.get_delta(label)
 
-    def back(self, **env):
+        inputs = (i.eval(env) for i in self.inputs)
+        deltas = (i.frwd(env) for i in self.inputs)
+
+        delta = self.df(*inputs, *deltas)
+        env.set_delta(label, delta)
+
+        return delta
+
+    def back(self, env):
         inputs = tuple(inp.eval(**env) for inp in self.inputs)
 
         out_indices = tuple(out.inputs.index(self) for out in self.outputs)
@@ -198,24 +168,21 @@ class VarError(Exception):
 
 
 class Var(BaseNode):
-    def eval(self, **env: Env) -> Number:
-        try:
-            return env[self.name]
-        except KeyError:
-            raise VarError(f'Cannot evaluate variable "{self}"')
+    def eval(self, env: Env) -> Number:
+        return env.get_value(self.label)
 
-    def _fwd(self, **env: ValEnv) -> Val:
-        try:
-            return env[self.name]
-        except KeyError:
-            raise VarError(f'Cannot evaluate variable "{self}"')
+    def frwd(self, env: Env) -> Number:
+        return env.get_delta(self.label)
+
+    def back(self, env: Env) -> Number:
+        return env.get_value(self.label)
 
 
 class Id(Node):
-    def back(self, **env):
+    def back(self, env):
         if len(self.outputs) == 0:
             try:
-                return [env[self.name]]
+                return [env[self.label]]
             except KeyError:
                 raise VarError(f'Cannot evaluate output variable "{self}"')
 
@@ -234,7 +201,7 @@ class Id(Node):
     @property
     def name_expr(self):
         x = self.inputs[0]
-        return f'{x.name}'
+        return f'{x.label}'
 
     @property
     def full_expr(self):
@@ -249,7 +216,7 @@ class Unary(Node):
     @property
     def name_expr(self):
         x = self.inputs[0]
-        return f'{self.op_str}({x.name})'
+        return f'{self.op_str}({x.label})'
 
     @property
     def full_expr(self):
@@ -291,7 +258,7 @@ class Binary(Node):
     @property
     def name_expr(self):
         x, y = self.inputs
-        return f'{x.name}{self.op_str}{y.name}'
+        return f'{x.label}{self.op_str}{y.label}'
 
     @property
     def full_expr(self):
