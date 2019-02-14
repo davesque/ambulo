@@ -17,7 +17,7 @@ Name = str
 
 Env = Dict[Name, Number]
 ValEnv = Dict[Name, 'Val']
-MixEnv = Dict[Name, Union['Val', Number, Tuple[Number, Optional[Number]]]]
+MixEnv = Dict[Name, Union['Val', Number, Tuple[Number, Number]]]
 
 
 class Val(NamedTuple):
@@ -25,7 +25,7 @@ class Val(NamedTuple):
     dv: Optional[Number]
 
     @classmethod
-    def from_tuple(cls, t):
+    def from_tuple(cls, t: Tuple[Number, Number]) -> 'Val':
         if not isinstance(t, tuple) or len(t) != 2:
             raise ValueError('Val instances can only be created from 2-tuples')
 
@@ -44,26 +44,7 @@ def to_valenv(env: MixEnv) -> ValEnv:
     return valenv
 
 
-class ReprMixin:
-    def __repr__(self):
-        return str(self)
-
-
-class OpsMixin:
-    def __add__(self, other):
-        return Add(self, other)
-
-    def __sub__(self, other):
-        return Sub(self, other)
-
-    def __mul__(self, other):
-        return Mul(self, other)
-
-    def __div__(self, other):
-        return Div(self, other)
-
-
-class BaseNode(OpsMixin, ReprMixin, abc.ABC):
+class BaseNode(abc.ABC):
     name: Name
     outputs: List['Node']
 
@@ -72,39 +53,53 @@ class BaseNode(OpsMixin, ReprMixin, abc.ABC):
         self.name = name
 
     @abc.abstractproperty
-    def arity(self):
+    def arity(self) -> int:
         pass
 
     @property
-    def is_unary(self):
+    def is_unary(self) -> bool:
         return self.arity == 1
 
     @property
-    def wrap_in_parens(self):
+    def wrap_in_parens(self) -> bool:
         return not self.is_unary
 
     @abc.abstractmethod
     def eval(self, **env: Env) -> Number:
         pass
 
-    @abc.abstractmethod
     def fwd(self, **env: MixEnv) -> Val:
-        pass
+        return self._fwd(**to_valenv(env))
 
     @abc.abstractmethod
     def _fwd(self, **env: ValEnv) -> Val:
         pass
 
     @abc.abstractproperty
-    def name_expr(self):
+    def name_expr(self) -> str:
         pass
 
     @abc.abstractproperty
-    def full_expr(self):
+    def full_expr(self) -> str:
         pass
 
-    def __str__(self):
+    def __str__(self) -> str:
         return self.name
+
+    def __repr__(self) -> str:
+        return str(self)
+
+    def __add__(self, other: 'BaseNode') -> 'Add':
+        return Add(self, other)
+
+    def __sub__(self, other: 'BaseNode') -> 'Sub':
+        return Sub(self, other)
+
+    def __mul__(self, other: 'BaseNode') -> 'Mul':
+        return Mul(self, other)
+
+    def __div__(self, other: 'BaseNode') -> 'Div':
+        return Div(self, other)
 
 
 class Node(BaseNode):
@@ -122,9 +117,6 @@ class Node(BaseNode):
         nums = (i.eval(**env) for i in self.inputs)
 
         return self.f(*nums)
-
-    def fwd(self, **env: MixEnv) -> Val:
-        return self._fwd(**to_valenv(env))
 
     def _fwd(self, **env: ValEnv) -> Val:
         vals = tuple(i._fwd(**env) for i in self.inputs)
@@ -161,9 +153,6 @@ class Var(BaseNode):
         except KeyError:
             raise VarError(f'Cannot evaluate variable "{self}"')
 
-    def fwd(self, **env: MixEnv) -> Val:
-        return self._fwd(**to_valenv(env))
-
     def _fwd(self, **env: ValEnv) -> Val:
         try:
             return env[self.name]
@@ -194,7 +183,7 @@ class Id(Node):
     @property
     def full_expr(self):
         x = self.inputs[0]
-        return f'{x}'
+        return f'{x.full_expr}'
 
 
 class Unary(Node):
@@ -209,7 +198,7 @@ class Unary(Node):
     @property
     def full_expr(self):
         x = self.inputs[0]
-        return f'{self.op_str}({x})'
+        return f'{self.op_str}({x.full_expr})'
 
 
 class Ln(Unary):
@@ -244,10 +233,12 @@ class Binary(Node):
     def full_expr(self):
         x, y = self.inputs
 
-        x = f'({x})' if x.wrap_in_parens else f'{x}'
-        y = f'({y})' if y.wrap_in_parens else f'{y}'
+        x_exp, y_exp = x.full_expr, y.full_expr
 
-        return f'{x}{self.op_str}{y}'
+        x_exp = f'({x_exp})' if x.wrap_in_parens else f'{x_exp}'
+        y_exp = f'({y_exp})' if y.wrap_in_parens else f'{y_exp}'
+
+        return f'{x_exp}{self.op_str}{y_exp}'
 
 
 class Add(Binary):
