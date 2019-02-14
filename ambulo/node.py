@@ -114,9 +114,9 @@ class Node(BaseNode):
         if env.has_value(label):
             return env.get_value(label)
 
-        inputs = (i.eval(env) for i in self.inputs)
+        inputs_ = (i.eval(env) for i in self.inputs)
 
-        value = self.f(*inputs)
+        value = self.f(*inputs_)
         env.set_value(label, value)
 
         return value
@@ -126,21 +126,34 @@ class Node(BaseNode):
         if env.has_delta(label):
             return env.get_delta(label)
 
-        inputs = (i.eval(env) for i in self.inputs)
-        deltas = (i.frwd(env) for i in self.inputs)
+        inputs_ = (i.eval(env) for i in self.inputs)
+        deltas_ = (i.frwd(env) for i in self.inputs)
 
-        delta = self.df(*inputs, *deltas)
+        delta = self.df(*inputs_, *deltas_)
         env.set_delta(label, delta)
 
         return delta
 
     def back(self, env):
-        inputs = tuple(inp.eval(**env) for inp in self.inputs)
+        label = self.label
+        if env.has_delta(label):
+            return env.get_delta(label)
 
-        out_indices = tuple(out.inputs.index(self) for out in self.outputs)
-        vo_bars = tuple(out.back(**env)[i] for i, out in zip(out_indices, self.outputs))
+        inputs_ = tuple(i.eval(env) for i in self.inputs)
+        delta_vecs = tuple(o.back(env) for o in self.outputs)
+        delta_idcs = tuple(o.inputs.index(self) for o in self.outputs)
+        deltas_ = tuple(vec[i] for vec, i in zip(delta_vecs, delta_idcs))
 
-        return self.di(*inputs, *vo_bars)
+        d = sum(deltas_)
+        n = len(self.inputs)
+        deltas = []
+        for i in range(n):
+            delta_vec = (0,) * i + (d,) + (0,) * (n - i - 1)
+            deltas.append(self.df(*inputs_, *delta_vec))
+
+        env.set_delta(label, deltas)
+
+        return deltas
 
     @property
     def arity(self) -> int:
@@ -175,28 +188,32 @@ class Var(BaseNode):
         return env.get_delta(self.label)
 
     def back(self, env: Env) -> Number:
-        return env.get_value(self.label)
+        label = self.label
+        if env.has_delta(label):
+            return env.get_delta(label)
+
+        delta_vecs = (o.back(env) for o in self.outputs)
+        delta_idcs = (o.inputs.index(self) for o in self.outputs)
+        deltas_ = (vec[i] for vec, i in zip(delta_vecs, delta_idcs))
+
+        deltas = [sum(deltas_)]
+        env.set_delta(label, deltas)
+
+        return deltas
 
 
 class Id(Node):
     def back(self, env):
         if len(self.outputs) == 0:
-            try:
-                return [env[self.label]]
-            except KeyError:
-                raise VarError(f'Cannot evaluate output variable "{self}"')
+            return [env.get_delta(self.label)]
 
-        return super().back(**env)
+        return super().back(env)
 
     def f(self, x):
         return x
 
     def df(self, x, dx):
         return dx
-
-    def di(self, x, *vo_bars):
-        v_bar = sum(vo_bars)
-        return [v_bar]
 
     @property
     def name_expr(self):
@@ -231,10 +248,6 @@ class Ln(Unary):
     def df(self, x, dx):
         return dx / x
 
-    def di(self, x, *vo_bars):
-        v_bar = sum(vo_bars)
-        return [v_bar / x]
-
 
 class Sin(Unary):
     op = staticmethod(math.sin)
@@ -242,10 +255,6 @@ class Sin(Unary):
 
     def df(self, x, dx):
         return math.cos(x) * dx
-
-    def di(self, x, *vo_bars):
-        v_bar = sum(vo_bars)
-        return [v_bar * math.cos(x)]
 
 
 class Binary(Node):
@@ -279,10 +288,6 @@ class Add(Binary):
     def df(self, x, y, dx, dy):
         return dx + dy
 
-    def di(self, x, y, *vo_bars):
-        v_bar = sum(vo_bars)
-        return [v_bar, v_bar]
-
 
 class Sub(Binary):
     op = staticmethod(operator.sub)
@@ -290,10 +295,6 @@ class Sub(Binary):
 
     def df(self, x, y, dx, dy):
         return dx - dy
-
-    def di(self, x, y, *vo_bars):
-        v_bar = sum(vo_bars)
-        return [v_bar, -v_bar]
 
 
 class Mul(Binary):
@@ -305,10 +306,6 @@ class Mul(Binary):
     def df(self, x, y, dx, dy):
         return x * dy + dx * y
 
-    def di(self, x, y, *vo_bars):
-        v_bar = sum(vo_bars)
-        return [y * v_bar, x * v_bar]
-
 
 class Div(Binary):
     op = staticmethod(operator.truediv)
@@ -316,7 +313,3 @@ class Div(Binary):
 
     def df(self, x, y, dx, dy):
         return (dx * y - x * dy) / y ** 2
-
-    def di(self, x, y, *vo_bars):
-        v_bar = sum(vo_bars)
-        return [v_bar / y, v_bar * (-x / y ** 2)]
