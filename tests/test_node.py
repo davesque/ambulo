@@ -16,8 +16,15 @@ class MySin(Node):
     def df(self, x, dx):
         return dx * math.cos(x)
 
-    def __str__(self):
-        return f'sin({self.inputs[0]})'
+    @property
+    def name_expr(self):
+        x = self.inputs[0]
+        return f'sin({x.name})'
+
+    @property
+    def full_expr(self):
+        x = self.inputs[0]
+        return f'sin({x})'
 
 
 class MyMul(Node):
@@ -27,8 +34,15 @@ class MyMul(Node):
     def df(self, x, y, dx, dy):
         return x * dy + y * dx
 
-    def __str__(self):
-        return f'{self.inputs[0]} * {self.inputs[1]}'
+    @property
+    def name_expr(self):
+        x, y = self.inputs
+        return f'{x.name} * {y.name}'
+
+    @property
+    def full_expr(self):
+        x, y = self.inputs
+        return f'{x} * {y}'
 
 
 @pytest.fixture
@@ -68,11 +82,11 @@ def test_var_eval_raises_val_error(x):
 
 
 def test_var_arity(x):
-    assert x.arity == 1
+    assert x.arity == 0
 
 
-def test_var_is_unary(x):
-    assert x.is_unary
+def test_var_is_not_unary(x):
+    assert not x.is_unary
 
 
 def test_node_init_connets_nodes_both_ways(mul_xy, x, y):
