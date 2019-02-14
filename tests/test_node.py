@@ -81,14 +81,6 @@ def test_var_eval_raises_val_error(x):
         x.eval(y=2)
 
 
-def test_var_arity(x):
-    assert x.arity == 0
-
-
-def test_var_is_not_unary(x):
-    assert not x.is_unary
-
-
 def test_node_init_connets_nodes_both_ways(mul_xy, x, y):
     assert x in mul_xy.inputs
     assert y in mul_xy.inputs

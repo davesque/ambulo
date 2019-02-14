@@ -48,21 +48,11 @@ class BaseNode(abc.ABC):
     name: Name
     outputs: List['Node']
 
+    wrap_in_parens = False
+
     def __init__(self, name: Name):
         self.outputs = []
         self.name = name
-
-    @abc.abstractproperty
-    def arity(self) -> int:
-        pass
-
-    @property
-    def is_unary(self) -> bool:
-        return self.arity == 1
-
-    @property
-    def wrap_in_parens(self) -> bool:
-        return not self.is_unary
 
     @abc.abstractmethod
     def eval(self, **env: Env) -> Number:
@@ -75,16 +65,16 @@ class BaseNode(abc.ABC):
     def _fwd(self, **env: ValEnv) -> Val:
         pass
 
-    @abc.abstractproperty
-    def name_expr(self) -> str:
-        pass
-
-    @abc.abstractproperty
-    def full_expr(self) -> str:
-        pass
-
     def __str__(self) -> str:
         return self.name
+
+    @property
+    def name_expr(self) -> str:
+        return str(self)
+
+    @property
+    def full_expr(self) -> str:
+        return str(self)
 
     def __repr__(self) -> str:
         return str(self)
@@ -127,15 +117,23 @@ class Node(BaseNode):
         return Val(self.f(*vs), self.df(*vs, *dvs))
 
     @property
-    def arity(self):
+    def arity(self) -> int:
         return len(self.inputs)
 
+    @property
+    def is_unary(self) -> bool:
+        return self.arity == 1
+
+    @property
+    def wrap_in_parens(self) -> bool:
+        return not self.is_unary
+
     @abc.abstractmethod
-    def f(self, *args):
+    def f(self, *args) -> Number:
         pass
 
     @abc.abstractmethod
-    def df(self, *args):
+    def df(self, *args) -> Number:
         pass
 
 
@@ -144,9 +142,6 @@ class VarError(Exception):
 
 
 class Var(BaseNode):
-    arity = 0
-    wrap_in_parens = False
-
     def eval(self, **env: Env) -> Number:
         try:
             return env[self.name]
@@ -158,14 +153,6 @@ class Var(BaseNode):
             return env[self.name]
         except KeyError:
             raise VarError(f'Cannot evaluate variable "{self}"')
-
-    @property
-    def name_expr(self):
-        return str(self)
-
-    @property
-    def full_expr(self):
-        return str(self)
 
 
 class Id(Node):
