@@ -16,6 +16,10 @@ Number = Union[float, int]
 Workspace = Dict[Label, Number]
 
 
+def one_hot_vec(v, i, n):
+    return (0,) * i + (v,) + (0,) * (n - i - 1)
+
+
 class Env:
     values: Workspace
     deltas: Workspace
@@ -146,10 +150,10 @@ class Node(BaseNode):
 
         d = sum(deltas_)
         n = len(self.inputs)
-        deltas = []
-        for i in range(n):
-            delta_vec = (0,) * i + (d,) + (0,) * (n - i - 1)
-            deltas.append(self.df(*inputs_, *delta_vec))
+        deltas = tuple(
+            self.df(*inputs_, *one_hot_vec(d, i, n))
+            for i in range(n)
+        )
 
         env.set_delta(label, deltas)
 
@@ -196,7 +200,7 @@ class Var(BaseNode):
         delta_idcs = (o.inputs.index(self) for o in self.outputs)
         deltas_ = (vec[i] for vec, i in zip(delta_vecs, delta_idcs))
 
-        deltas = [sum(deltas_)]
+        deltas = (sum(deltas_),)
         env.set_delta(label, deltas)
 
         return deltas
@@ -205,7 +209,7 @@ class Var(BaseNode):
 class Id(Node):
     def back(self, env):
         if len(self.outputs) == 0:
-            return [env.get_delta(self.label)]
+            return (env.get_delta(self.label),)
 
         return super().back(env)
 
