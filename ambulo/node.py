@@ -36,23 +36,23 @@ class Env:
         self.values = values or {}
         self.deltas = deltas or {}
 
-    def set_value(self, label, value):
-        self.values[label] = value
+    def set_value(self, node: 'BaseNode', value: Number):
+        self.values[node] = value
 
-    def set_delta(self, label, delta):
-        self.deltas[label] = delta
+    def set_delta(self, node: 'BaseNode', delta: Number):
+        self.deltas[node] = delta
 
-    def get_value(self, label: Label) -> Number:
-        return self.values[label]
+    def get_value(self, node: 'BaseNode') -> Number:
+        return self.values[node]
 
-    def get_delta(self, label: Label) -> Number:
-        return self.deltas[label]
+    def get_delta(self, node: 'BaseNode') -> Number:
+        return self.deltas[node]
 
-    def has_value(self, label: Label) -> bool:
-        return label in self.values
+    def has_value(self, node: 'BaseNode') -> bool:
+        return node in self.values
 
-    def has_delta(self, label: Label) -> bool:
-        return label in self.deltas
+    def has_delta(self, node: 'BaseNode') -> bool:
+        return node in self.deltas
 
     def __repr__(self):
         values = pprint.pformat(self.values)
@@ -76,22 +76,17 @@ class BaseNode(abc.ABC):
         pass
 
     @abc.abstractmethod
-    def frwd(self, env: Env) -> Number:
+    def df_dx(self, env: Env) -> Number:
         pass
 
-    @abc.abstractmethod
-    def back(self, env: Env) -> Number:
-        pass
+    def dy_df(self, env) -> Number:
+        if env.has_delta(self):
+            return env.get_delta(self)
 
-    def back_(self, env) -> Number:
-        label = self.label
-        if env.has_delta(label):
-            return env.get_delta(label)
-
-        deltas_ = (o.df_di(env, self) for o in self.outputs)
+        deltas_ = (o.df_dv(env, self) for o in self.outputs)
 
         delta = sum(deltas_)
-        env.set_delta(label, delta)
+        env.set_delta(self, delta)
 
         return delta
 
@@ -134,33 +129,31 @@ class Node(BaseNode):
         self.label = label
 
     def eval(self, env: Env) -> Number:
-        label = self.label
-        if env.has_value(label):
-            return env.get_value(label)
+        if env.has_value(self):
+            return env.get_value(self)
 
         inputs_ = (i.eval(env) for i in self.inputs)
 
         value = self.f(*inputs_)
-        env.set_value(label, value)
+        env.set_value(self, value)
 
         return value
 
-    def frwd(self, env: Env) -> Number:
-        label = self.label
-        if env.has_delta(label):
-            return env.get_delta(label)
+    def df_dx(self, env: Env) -> Number:
+        if env.has_delta(self):
+            return env.get_delta(self)
 
         inputs_ = (i.eval(env) for i in self.inputs)
-        deltas_ = (i.frwd(env) for i in self.inputs)
+        deltas_ = (i.df_dx(env) for i in self.inputs)
 
         delta = self.df(*inputs_, *deltas_)
-        env.set_delta(label, delta)
+        env.set_delta(self, delta)
 
         return delta
 
-    def df_di(self, env, input) -> Number:
+    def df_dv(self, env, input) -> Number:
         inputs_ = (i.eval(env) for i in self.inputs)
-        delta_ = self.back_(env)
+        delta_ = self.dy_df(env)
 
         i = self.inputs.index(input)
         n = len(self.inputs)
@@ -194,18 +187,18 @@ class VarError(Exception):
 
 class Var(BaseNode):
     def eval(self, env: Env) -> Number:
-        return env.get_value(self.label)
+        return env.get_value(self)
 
-    def frwd(self, env: Env) -> Number:
-        return env.get_delta(self.label)
+    def df_dx(self, env: Env) -> Number:
+        return env.get_delta(self)
 
 
 class Id(Node):
-    def back(self, env) -> Tuple[Number, ...]:
+    def dy_df(self, env) -> Number:
         if len(self.outputs) == 0:
-            return (env.get_delta(self.label),)
+            return env.get_delta(self)
 
-        return super().back(env)
+        return super().dy_df(env)
 
     def f(self, x):
         return x
