@@ -28,7 +28,7 @@ def one_hot_vec(v: Number, i: int, n: int) -> Vector:
     return (0,) * i + (v,) + (0,) * (n - i - 1)
 
 
-class Env:
+class Session:
     values: Workspace
     deltas: Workspace
 
@@ -72,21 +72,21 @@ class BaseNode(abc.ABC):
         self.label = label
 
     @abc.abstractmethod
-    def eval(self, env: Env) -> Number:
+    def eval(self, sess: Session) -> Number:
         pass
 
     @abc.abstractmethod
-    def df_dx(self, env: Env) -> Number:
+    def df_di(self, sess: Session) -> Number:
         pass
 
-    def dy_df(self, env) -> Number:
-        if env.has_delta(self):
-            return env.get_delta(self)
+    def do_df(self, sess) -> Number:
+        if sess.has_delta(self):
+            return sess.get_delta(self)
 
-        deltas_ = (o.df_dv(env, self) for o in self.outputs)
+        deltas_ = (o.df_df(sess, self) for o in self.outputs)
 
         delta = sum(deltas_)
-        env.set_delta(self, delta)
+        sess.set_delta(self, delta)
 
         return delta
 
@@ -128,32 +128,32 @@ class Node(BaseNode):
         self.outputs = []
         self.label = label
 
-    def eval(self, env: Env) -> Number:
-        if env.has_value(self):
-            return env.get_value(self)
+    def eval(self, sess: Session) -> Number:
+        if sess.has_value(self):
+            return sess.get_value(self)
 
-        inputs_ = (i.eval(env) for i in self.inputs)
+        inputs_ = (i.eval(sess) for i in self.inputs)
 
         value = self.f(*inputs_)
-        env.set_value(self, value)
+        sess.set_value(self, value)
 
         return value
 
-    def df_dx(self, env: Env) -> Number:
-        if env.has_delta(self):
-            return env.get_delta(self)
+    def df_di(self, sess: Session) -> Number:
+        if sess.has_delta(self):
+            return sess.get_delta(self)
 
-        inputs_ = (i.eval(env) for i in self.inputs)
-        deltas_ = (i.df_dx(env) for i in self.inputs)
+        inputs_ = (i.eval(sess) for i in self.inputs)
+        deltas_ = (i.df_di(sess) for i in self.inputs)
 
         delta = self.df(*inputs_, *deltas_)
-        env.set_delta(self, delta)
+        sess.set_delta(self, delta)
 
         return delta
 
-    def df_dv(self, env, input) -> Number:
-        inputs_ = (i.eval(env) for i in self.inputs)
-        delta_ = self.dy_df(env)
+    def df_df(self, sess, input) -> Number:
+        inputs_ = (i.eval(sess) for i in self.inputs)
+        delta_ = self.do_df(sess)
 
         i = self.inputs.index(input)
         n = len(self.inputs)
@@ -186,19 +186,19 @@ class VarError(Exception):
 
 
 class Var(BaseNode):
-    def eval(self, env: Env) -> Number:
-        return env.get_value(self)
+    def eval(self, sess: Session) -> Number:
+        return sess.get_value(self)
 
-    def df_dx(self, env: Env) -> Number:
-        return env.get_delta(self)
+    def df_di(self, sess: Session) -> Number:
+        return sess.get_delta(self)
 
 
 class Id(Node):
-    def dy_df(self, env) -> Number:
+    def do_df(self, sess) -> Number:
         if len(self.outputs) == 0:
-            return env.get_delta(self)
+            return sess.get_delta(self)
 
-        return super().dy_df(env)
+        return super().do_df(sess)
 
     def f(self, x):
         return x
