@@ -13,10 +13,18 @@ from typing import (
 
 Label = str
 Number = Union[float, int]
+Vector = Tuple[Number, ...]
 Workspace = Dict[Label, Number]
 
 
-def one_hot_vec(v, i, n):
+def one_hot_vec(v: Number, i: int, n: int) -> Vector:
+    """
+    Returns a one-hot vector of ``n`` elements with the value ``v`` as the
+    element at zero-index ``i``.
+    """
+    if i >= n:
+        raise ValueError('Element index must be less than vector length')
+
     return (0,) * i + (v,) + (0,) * (n - i - 1)
 
 
