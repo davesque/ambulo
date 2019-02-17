@@ -91,7 +91,7 @@ def test_matrix_matrix_add_raises_value_error(A, B):
         A + B
 
 
-def test_matrix_matrix_mul(B):
+def test_matrix_matrix_add(B):
     assert B + B == Matrix([
         [2, 4],
         [6, 8],
@@ -127,4 +127,18 @@ def test_matrix_T(A):
         [2, 6, 10],
         [3, 7, 11],
         [4, 8, 12],
+    ])
+
+
+def test_matrix_matrix_mul_raises_value_error(A, B):
+    with pytest.raises(ValueError):
+        A @ B
+
+
+def test_matrix_matrix_mul(A, B):
+    assert A.T @ B == Matrix([
+        [61, 76],
+        [70, 88],
+        [79, 100],
+        [88, 112],
     ])

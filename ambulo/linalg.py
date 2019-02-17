@@ -51,3 +51,16 @@ class Matrix:
             [self[i, j] for i in range(self.m)]
             for j in range(self.n)
         ])
+
+    def __matmul__(self, other):
+        if self.n != other.m:
+            raise ValueError('Matrices must have compatible dimensions')
+
+        A, B = self, other
+        C = Matrix([[None for _ in range(other.n)] for _ in range(self.m)])
+
+        for k in range(B.n):
+            for i in range(A.m):
+                C[i, k] = sum(A[i, j] * B[j, k] for j in range(A.n))
+
+        return C
