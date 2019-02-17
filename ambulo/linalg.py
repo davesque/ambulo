@@ -41,3 +41,13 @@ class Matrix:
             [[x + y for x, y in zip(s_row, o_row)]
              for s_row, o_row in zip(self, other)]
         )
+
+    def __sub__(self, other):
+        return self + -1 * other
+
+    @property
+    def T(self):
+        return Matrix([
+            [self[i, j] for i in range(self.m)]
+            for j in range(self.n)
+        ])

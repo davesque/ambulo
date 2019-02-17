@@ -107,3 +107,24 @@ def test_matrix_matrix_mul(B):
         [4, 5],
         [6, 7],
     ])
+
+
+def test_matrix_matrix_sub(B):
+    assert B - Matrix([
+        [1, 1],
+        [1, 1],
+        [1, 1],
+    ]) == Matrix([
+        [0, 1],
+        [2, 3],
+        [4, 5],
+    ])
+
+
+def test_matrix_T(A):
+    assert A.T == Matrix([
+        [1, 5, 9],
+        [2, 6, 10],
+        [3, 7, 11],
+        [4, 8, 12],
+    ])
