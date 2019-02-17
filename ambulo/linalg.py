@@ -27,27 +27,28 @@ class Matrix:
         return True
 
     def __mul__(self, other):
-        return type(self)(
-            [[other * x for x in row]
-             for row in self]
-        )
+        return type(self)([
+            [other * x for x in row]
+            for row in self
+        ])
+
     __rmul__ = __mul__
 
     def __add__(self, other):
         if (self.m, self.n) != (other.m, other.n):
             raise ValueError('Matrices must have same dimensions')
 
-        return type(self)(
-            [[x + y for x, y in zip(s_row, o_row)]
-             for s_row, o_row in zip(self, other)]
-        )
+        return type(self)([
+            [x + y for x, y in zip(s_row, o_row)]
+            for s_row, o_row in zip(self, other)
+        ])
 
     def __sub__(self, other):
         return self + -1 * other
 
     @property
     def T(self):
-        return Matrix([
+        return type(self)([
             [self[i, j] for i in range(self.m)]
             for j in range(self.n)
         ])
@@ -56,11 +57,10 @@ class Matrix:
         if self.n != other.m:
             raise ValueError('Matrices must have compatible dimensions')
 
-        A, B = self, other
-        C = Matrix([[None for _ in range(other.n)] for _ in range(self.m)])
-
-        for k in range(B.n):
-            for i in range(A.m):
-                C[i, k] = sum(A[i, j] * B[j, k] for j in range(A.n))
-
-        return C
+        return type(self)([
+            [
+                sum(self[i, j] * other[j, k] for j in range(self.n))
+                for k in range(other.n)
+            ]
+            for i in range(self.m)
+        ])
