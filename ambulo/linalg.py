@@ -1,3 +1,15 @@
+def flatten(seq, seqtypes=(list, tuple)):
+    # Make copy and convert to list
+    seq = list(seq)
+
+    # Flatten list in-place
+    for i, _ in enumerate(seq):
+        while isinstance(seq[i], seqtypes):
+            seq[i:i + 1] = seq[i]
+
+    return seq
+
+
 class Matrix:
     def __init__(self, lst):
         self.m = len(lst)

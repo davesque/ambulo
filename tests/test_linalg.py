@@ -1,6 +1,8 @@
+import functools
 import pytest
 
 from ambulo.linalg import (
+    flatten,
     Matrix,
 )
 
@@ -142,3 +144,11 @@ def test_matrix_matrix_mul(A, B):
         [79, 100],
         [88, 112],
     ])
+
+
+def test_flatten_should_flatten_an_arbitrarily_nested_list():
+    assert flatten([1, 2, [3, 4, [5, 6]]]) == [1, 2, 3, 4, 5, 6]
+
+    heavily_nested = functools.reduce(lambda a, i: (a, i), range(1000))
+
+    assert flatten(heavily_nested) == list(range(1000))
