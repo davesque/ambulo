@@ -47,7 +47,7 @@ def get_seq_dims(seq):
     if not seq_has_dims(seq, dims):
         raise ValueError('Sequence dimensions are not square')
 
-    return dims
+    return tuple(dims)
 
 
 def seq_has_dims(seq, dims):
@@ -122,9 +122,7 @@ class Tensor:
         return True
 
     def __mul__(self, other):
-        return type(self)([
-            other * x for x in self
-        ], self.dims)
+        return type(self)([other * x for x in self], self.dims)
 
     __rmul__ = __mul__
 
@@ -132,9 +130,7 @@ class Tensor:
         if self.dims != other.dims:
             raise ValueError('Tensors must have same dimensions')
 
-        return type(self)([
-            x + y for x, y in zip(self, other)
-        ], self.dims)
+        return type(self)([x + y for x, y in zip(self, other)], self.dims)
 
     def __sub__(self, other):
         return self + -1 * other
@@ -148,7 +144,7 @@ class Tensor:
 
     def __matmul__(self, other):
         if self.dims[-1] != other.dims[0]:
-            raise ValueError('Matrices must have compatible dimensions')
+            raise ValueError('Tensors must have compatible dimensions')
 
         return type(self)([
             [

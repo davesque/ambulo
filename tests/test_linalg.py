@@ -63,7 +63,7 @@ def test_tensor_iter(A):
         i += 1
 
 
-def test_tensor_eq(A):
+def test_tensor_eq(A, B):
     assert A == Tensor([
         [1, 2, 3, 4],
         [5, 6, 7, 8],
@@ -75,6 +75,8 @@ def test_tensor_eq(A):
         [5, 6, 7, 8],
         [9, 10, 11, 12],
     ])
+
+    assert A != B
 
 
 def test_tensor_scalar_mul(B):
