@@ -1,3 +1,17 @@
+import functools
+import operator
+import pprint
+
+
+def chunks(lst, n):
+    i = 0
+    len_lst = len(lst)
+
+    while i < len_lst:
+        yield lst[i:i + n]
+        i += n
+
+
 def flatten(seq, seqtypes=(list, tuple)):
     # Make copy and convert to list
     seq = list(seq)
@@ -10,50 +24,117 @@ def flatten(seq, seqtypes=(list, tuple)):
     return seq
 
 
+def unflatten(seq, multipliers):
+    if len(multipliers) == 0:
+        return seq
+
+    lst = []
+
+    for seq_ in chunks(seq, multipliers[0]):
+        lst.append(unflatten(seq_, multipliers[1:]))
+
+    return lst
+
+
+def get_seq_dims(seq):
+    dims = [len(seq)]
+    seq_ = seq[0]
+
+    while isinstance(seq_, (list, tuple)):
+        dims.append(len(seq_))
+        seq_ = seq_[0]
+
+    if not seq_has_dims(seq, dims):
+        raise ValueError('Sequence dimensions are not square')
+
+    return dims
+
+
+def seq_has_dims(seq, dims):
+    if len(dims) == 0:
+        return True
+
+    if len(seq) != dims[0]:
+        return False
+
+    return all(seq_has_dims(seq_, dims[1:]) for seq_ in seq)
+
+
+def to_tuple(old_fn):
+    @functools.wraps(old_fn)
+    def new_fn(*args, **kwargs):
+        return tuple(old_fn(*args, **kwargs))
+
+    return new_fn
+
+
+@to_tuple
+def get_idx_multipliers(dims):
+    total = functools.reduce(operator.mul, dims)
+
+    for d in dims:
+        total //= d
+        yield total
+
+
+def get_flat_idx(indices, multipliers):
+    return sum(i * d for i, d in zip(indices, multipliers))
+
+
 class Matrix:
-    def __init__(self, lst):
-        self.m = len(lst)
-        self.n = len(lst[0])
+    def __init__(self, lst, dims=None):
+        self._lst = flatten(lst)
 
-        for row in lst[1:]:
-            if len(row) != self.n:
-                raise ValueError('Matrix rows must have same length')
+        if dims is not None:
+            self.dims = tuple(dims)
+            if len(lst) != functools.reduce(operator.mul, dims):
+                raise ValueError('Given sequence cannot be cast into given dimensions')
+        else:
+            self.dims = tuple(get_seq_dims(lst))
 
-        self.lst = lst
+        self._idx_mul = get_idx_multipliers(self.dims)
+
+    @property
+    def m(self):
+        return self.dims[0]
+
+    @property
+    def n(self):
+        return self.dims[1]
 
     def __getitem__(self, key):
-        return self.lst[key[0]][key[1]]
+        return self._lst[get_flat_idx(key, self._idx_mul)]
 
     def __setitem__(self, key, value):
-        self.lst[key[0]][key[1]] = value
+        self._lst[get_flat_idx(key, self._idx_mul)] = value
 
     def __iter__(self):
-        return iter(self.lst)
+        return iter(self._lst)
 
     def __eq__(self, other):
-        for s_row, o_row in zip(self, other):
-            for x, y in zip(s_row, o_row):
-                if x != y:
-                    return False
+        if self.dims != other.dims:
+            return False
+
+        for x, y in zip(self, other):
+            if x != y:
+                return False
 
         return True
 
     def __mul__(self, other):
         return type(self)([
-            [other * x for x in row]
-            for row in self
-        ])
+            other * x for x in self
+        ], self.dims)
 
     __rmul__ = __mul__
 
     def __add__(self, other):
-        if (self.m, self.n) != (other.m, other.n):
-            raise ValueError('Matrices must have same dimensions')
+        if self.dims != other.dims:
+            raise ValueError('Tensors must have same dimensions')
 
         return type(self)([
-            [x + y for x, y in zip(s_row, o_row)]
-            for s_row, o_row in zip(self, other)
-        ])
+            x + y for x, y in zip(self, other)
+        ], self.dims)
 
     def __sub__(self, other):
         return self + -1 * other
@@ -66,7 +147,7 @@ class Matrix:
         ])
 
     def __matmul__(self, other):
-        if self.n != other.m:
+        if self.dims[-1] != other.dims[0]:
             raise ValueError('Matrices must have compatible dimensions')
 
         return type(self)([
@@ -76,3 +157,11 @@ class Matrix:
             ]
             for i in range(self.m)
         ])
+
+    def __str__(self):
+        return pprint.pformat(
+            unflatten(self._lst, self._idx_mul[:-1]),
+        )
+
+    def __repr__(self):
+        return str(self)

@@ -3,6 +3,7 @@ import pytest
 
 from ambulo.linalg import (
     flatten,
+    seq_has_dims,
     Matrix,
 )
 
@@ -56,8 +57,10 @@ def test_matrix_setitem(A):
 
 
 def test_matrix_iter(A):
-    for i, row in enumerate(A):
-        assert row == list(range(i * 4 + 1, (i + 1) * 4 + 1))
+    i = 1
+    for x in A:
+        assert x == i
+        i += 1
 
 
 def test_matrix_eq(A):
@@ -152,3 +155,31 @@ def test_flatten_should_flatten_an_arbitrarily_nested_list():
     heavily_nested = functools.reduce(lambda a, i: (a, i), range(1000))
 
     assert flatten(heavily_nested) == list(range(1000))
+
+
+def test_seq_has_dims():
+    assert seq_has_dims([
+        [0, 0],
+        [0, 0],
+        [0, 0],
+    ], (3, 2))
+
+    assert seq_has_dims([
+        [[0, 0], [0, 0], [0, 0]],
+        [[0, 0], [0, 0], [0, 0]],
+        [[0, 0], [0, 0], [0, 0]],
+        [[0, 0], [0, 0], [0, 0]],
+    ], (4, 3, 2))
+
+    assert not seq_has_dims([
+        [0, 0],
+        [0, 0, 0],
+        [0, 0],
+    ], (3, 2))
+
+    assert not seq_has_dims([
+        [[0, 0], [0, 0]],
+        [[0, 0], [0, 0]],
+        [[0, 0], [0, 0]],
+        [[0, 0], [0, 0]],
+    ], (4, 3, 2))
