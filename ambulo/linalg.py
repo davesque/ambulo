@@ -81,7 +81,7 @@ def get_flat_idx(indices, multipliers):
     return sum(i * d for i, d in zip(indices, multipliers))
 
 
-class Matrix:
+class Tensor:
     def __init__(self, lst, dims=None):
         self._lst = flatten(lst)
 
