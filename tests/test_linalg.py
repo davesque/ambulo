@@ -151,14 +151,6 @@ def test_tensor_tensor_mul(A, B):
     ])
 
 
-def test_flatten_should_flatten_an_arbitrarily_nested_list():
-    assert flatten([1, 2, [3, 4, [5, 6]]]) == [1, 2, 3, 4, 5, 6]
-
-    heavily_nested = functools.reduce(lambda a, i: (a, i), range(1000))
-
-    assert flatten(heavily_nested) == list(range(1000))
-
-
 def test_seq_has_dims():
     assert seq_has_dims([
         [0, 0],

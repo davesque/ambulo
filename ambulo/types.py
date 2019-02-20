@@ -1,3 +1,9 @@
+from decimal import (
+    Decimal,
+)
+from fractions import (
+    Fraction,
+)
 from typing import (
     Union,
     Tuple,
@@ -6,6 +12,6 @@ from typing import (
 
 
 Label = str
-Number = Union[float, int]
+Number = Union[float, int, Decimal, Fraction]
 Vector = Tuple[Number, ...]
 Workspace = Dict[Label, Number]

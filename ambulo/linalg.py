@@ -1,84 +1,56 @@
 import functools
 import operator
 import pprint
+from typing import (
+    Iterable,
+    Sequence,
+)
+
+from .utils import (
+    flatten,
+    get_seq_dims,
+    to_tuple,
+    unflatten,
+)
+from .types import (
+    Number,
+)
 
 
-def chunks(lst, n):
-    i = 0
-    len_lst = len(lst)
-
-    while i < len_lst:
-        yield lst[i:i + n]
-        i += n
+def product(seq: Sequence[Number]) -> Number:
+    """
+    Returns the product of all elements in ``seq``.
+    """
+    return functools.reduce(operator.mul, seq)
 
 
-def flatten(seq, seqtypes=(list, tuple)):
-    # Make copy and convert to list
-    seq = list(seq)
-
-    # Flatten list in-place
-    for i, _ in enumerate(seq):
-        while isinstance(seq[i], seqtypes):
-            seq[i:i + 1] = seq[i]
-
-    return seq
-
-
-def unflatten(seq, multipliers):
-    if len(multipliers) == 0:
-        return seq
-
-    lst = []
-
-    for seq_ in chunks(seq, multipliers[0]):
-        lst.append(unflatten(seq_, multipliers[1:]))
-
-    return lst
-
-
-def get_seq_dims(seq):
-    dims = [len(seq)]
-    seq_ = seq[0]
-
-    while isinstance(seq_, (list, tuple)):
-        dims.append(len(seq_))
-        seq_ = seq_[0]
-
-    if not seq_has_dims(seq, dims):
-        raise ValueError('Sequence dimensions are not square')
-
-    return tuple(dims)
-
-
-def seq_has_dims(seq, dims):
-    if len(dims) == 0:
-        return True
-
-    if len(seq) != dims[0]:
-        return False
-
-    return all(seq_has_dims(seq_, dims[1:]) for seq_ in seq)
-
-
-def to_tuple(old_fn):
-    @functools.wraps(old_fn)
-    def new_fn(*args, **kwargs):
-        return tuple(old_fn(*args, **kwargs))
-
-    return new_fn
+def dot(A: Iterable[Number], B: Iterable[Number]) -> Number:
+    """
+    Returns the dot product of the iterable vectors ``A`` and ``B``.
+    """
+    return sum(a * b for a, b in zip(A, B))
 
 
 @to_tuple
-def get_idx_multipliers(dims):
-    total = functools.reduce(operator.mul, dims)
+def get_idx_multipliers(dims: Sequence[Number]) -> Iterable[Number]:
+    """
+    For dimensions with sizes given in ``dims``, returns the number of elements
+    identified by walking down each dimension.
+
+    For example, let dimensions ``(3, 3, 3, 3)`` represent the dimensions of a
+    rank-4 tensor with 4 indices and 3 possible values for each index.
+    Providing a value for the first index identifies 27 possible elements.
+    Providing a value for the second index identifies 9 elements within those
+    27.  Providing a value for the third index identifies 3 elements within
+    those 9.  Providing the last index uniquely identifies a single element
+    within those 3.  Thus, the resulting "index multipliers" are ``(27, 9, 3,
+    1)``.
+    """
+    multiplier = product(dims)
 
     for d in dims:
-        total //= d
-        yield total
-
-
-def get_flat_idx(indices, multipliers):
-    return sum(i * d for i, d in zip(indices, multipliers))
+        multiplier //= d
+        yield multiplier
 
 
 class Tensor:
@@ -87,7 +59,8 @@ class Tensor:
 
         if dims is not None:
             self.dims = tuple(dims)
-            if len(lst) != functools.reduce(operator.mul, dims):
+
+            if len(lst) != product(dims):
                 raise ValueError('Given sequence cannot be cast into given dimensions')
         else:
             self.dims = tuple(get_seq_dims(lst))
@@ -103,10 +76,10 @@ class Tensor:
         return self.dims[1]
 
     def __getitem__(self, key):
-        return self._lst[get_flat_idx(key, self._idx_mul)]
+        return self._lst[dot(key, self._idx_mul)]
 
     def __setitem__(self, key, value):
-        self._lst[get_flat_idx(key, self._idx_mul)] = value
+        self._lst[dot(key, self._idx_mul)] = value
 
     def __iter__(self):
         return iter(self._lst)
