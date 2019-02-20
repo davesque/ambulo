@@ -1,56 +1,13 @@
-import functools
-import operator
 import pprint
-from typing import (
-    Iterable,
-    Sequence,
-)
 
 from .utils import (
+    dot,
     flatten,
+    get_idx_multipliers,
     get_seq_dims,
-    to_tuple,
+    product,
     unflatten,
 )
-from .types import (
-    Number,
-)
-
-
-def product(seq: Sequence[Number]) -> Number:
-    """
-    Returns the product of all elements in ``seq``.
-    """
-    return functools.reduce(operator.mul, seq)
-
-
-def dot(A: Iterable[Number], B: Iterable[Number]) -> Number:
-    """
-    Returns the dot product of the iterable vectors ``A`` and ``B``.
-    """
-    return sum(a * b for a, b in zip(A, B))
-
-
-@to_tuple
-def get_idx_multipliers(dims: Sequence[Number]) -> Iterable[Number]:
-    """
-    For dimensions with sizes given in ``dims``, returns the number of elements
-    identified by walking down each dimension.
-
-    For example, let dimensions ``(3, 3, 3, 3)`` represent the dimensions of a
-    rank-4 tensor with 4 indices and 3 possible values for each index.
-    Providing a value for the first index identifies 27 possible elements.
-    Providing a value for the second index identifies 9 elements within those
-    27.  Providing a value for the third index identifies 3 elements within
-    those 9.  Providing the last index uniquely identifies a single element
-    within those 3.  Thus, the resulting "index multipliers" are ``(27, 9, 3,
-    1)``.
-    """
-    multiplier = product(dims)
-
-    for d in dims:
-        multiplier //= d
-        yield multiplier
 
 
 class Tensor:
