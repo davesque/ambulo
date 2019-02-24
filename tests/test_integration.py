@@ -28,9 +28,7 @@ y = Id(v5, label='y')
 
 @pytest.fixture
 def sess():
-    return Session(
-        {x1: 2, x2: 5},
-    )
+    return Session({x1: 2, x2: 5})
 
 
 def test_forward_tangent_mode_x1(sess):
