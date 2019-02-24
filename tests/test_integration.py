@@ -33,14 +33,6 @@ def sess():
     )
 
 
-@pytest.fixture
-def s_back():
-    return Session(
-        {x1: 2, x2: 5},
-        {y: 1},
-    )
-
-
 def test_forward_tangent_mode_x1(sess):
     sess.set_delta(x1, 1)
     sess.set_delta(x2, 0)
