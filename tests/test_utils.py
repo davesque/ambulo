@@ -6,6 +6,7 @@ from ambulo.utils import (
     chunks,
     flatten,
     unflatten,
+    seq_has_dims,
 )
 
 
@@ -78,3 +79,31 @@ def test_flatten_should_flatten_an_arbitrarily_nested_list():
 )
 def test_unflatten(lst, multipliers, expected):
     assert unflatten(lst, multipliers) == expected
+
+
+def test_seq_has_dims():
+    assert seq_has_dims([
+        [0, 0],
+        [0, 0],
+        [0, 0],
+    ], (3, 2))
+
+    assert seq_has_dims([
+        [[0, 0], [0, 0], [0, 0]],
+        [[0, 0], [0, 0], [0, 0]],
+        [[0, 0], [0, 0], [0, 0]],
+        [[0, 0], [0, 0], [0, 0]],
+    ], (4, 3, 2))
+
+    assert not seq_has_dims([
+        [0, 0],
+        [0, 0, 0],
+        [0, 0],
+    ], (3, 2))
+
+    assert not seq_has_dims([
+        [[0, 0], [0, 0]],
+        [[0, 0], [0, 0]],
+        [[0, 0], [0, 0]],
+        [[0, 0], [0, 0]],
+    ], (4, 3, 2))

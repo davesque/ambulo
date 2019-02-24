@@ -1,9 +1,6 @@
-import functools
 import pytest
 
 from ambulo.linalg import (
-    flatten,
-    seq_has_dims,
     Tensor,
 )
 
@@ -149,31 +146,3 @@ def test_tensor_tensor_mul(A, B):
         [79, 100],
         [88, 112],
     ])
-
-
-def test_seq_has_dims():
-    assert seq_has_dims([
-        [0, 0],
-        [0, 0],
-        [0, 0],
-    ], (3, 2))
-
-    assert seq_has_dims([
-        [[0, 0], [0, 0], [0, 0]],
-        [[0, 0], [0, 0], [0, 0]],
-        [[0, 0], [0, 0], [0, 0]],
-        [[0, 0], [0, 0], [0, 0]],
-    ], (4, 3, 2))
-
-    assert not seq_has_dims([
-        [0, 0],
-        [0, 0, 0],
-        [0, 0],
-    ], (3, 2))
-
-    assert not seq_has_dims([
-        [[0, 0], [0, 0]],
-        [[0, 0], [0, 0]],
-        [[0, 0], [0, 0]],
-        [[0, 0], [0, 0]],
-    ], (4, 3, 2))
