@@ -1,6 +1,7 @@
 import abc
 from typing import (
     List,
+    Optional,
     Tuple,
 )
 
@@ -41,7 +42,7 @@ class BaseNode(abc.ABC):
     def df_di(self, sess: Session) -> Number:
         pass
 
-    def do_df(self, sess) -> Number:
+    def do_df(self, sess: Session) -> Number:
         if sess.has_delta(self):
             return sess.get_delta(self)
 
@@ -90,7 +91,9 @@ class BaseNode(abc.ABC):
 class Node(BaseNode):
     inputs: Tuple['Node', ...]
 
-    def __init__(self, *inputs: Tuple['Node', ...], label=None):
+    def __init__(self,
+                 *inputs: Tuple['Node', ...],
+                 label: Optional[Label] = None):
         for i in inputs:
             i.outputs.append(self)
 
@@ -121,7 +124,7 @@ class Node(BaseNode):
 
         return delta
 
-    def df_df(self, sess, input) -> Number:
+    def df_df(self, sess: Session, input: 'BaseNode') -> Number:
         inputs_ = (i.eval(sess) for i in self.inputs)
         delta_ = self.do_df(sess)
 
@@ -143,11 +146,11 @@ class Node(BaseNode):
         return not self.is_unary
 
     @abc.abstractmethod
-    def f(self, *args) -> Number:
+    def f(self, *args: Vector) -> Number:
         pass
 
     @abc.abstractmethod
-    def df(self, *args) -> Number:
+    def df(self, *args: Vector) -> Number:
         pass
 
 
