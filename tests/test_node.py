@@ -5,7 +5,10 @@ import pytest
 from ambulo.node import (
     Node,
     Var,
-    VarError,
+)
+from ambulo.session import (
+    Session,
+    SessionError,
 )
 
 
@@ -70,15 +73,17 @@ def test_var_str(x):
 
 
 def test_var_eval(x):
-    assert x.eval(x=2) == 2
+    assert x.eval(Session({x: 2})) == 2
 
 
-def test_var_eval_raises_val_error(x):
-    with pytest.raises(VarError):
-        x.eval()
+def test_var_eval_raises_val_error(x, y):
+    s = Session()
+    with pytest.raises(SessionError):
+        x.eval(s)
 
-    with pytest.raises(VarError):
-        x.eval(y=2)
+    s.set_value(y, 2)
+    with pytest.raises(SessionError):
+        x.eval(s)
 
 
 def test_node_init_connets_nodes_both_ways(mul_xy, x, y):
@@ -89,8 +94,9 @@ def test_node_init_connets_nodes_both_ways(mul_xy, x, y):
     assert mul_xy in y.outputs
 
 
-def test_node_eval_gets_numerical_result(mul_xy):
-    assert mul_xy.eval(x=2, y=5) == 10
+def test_node_eval_gets_numerical_result(x, y, mul_xy):
+    s = Session({x: 2, y: 5})
+    assert mul_xy.eval(s) == 10
 
 
 def test_node_arity(mul_xy, sin_x):

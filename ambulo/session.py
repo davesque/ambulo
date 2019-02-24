@@ -11,6 +11,10 @@ if typing.TYPE_CHECKING:
     from .node import BaseNode  # noqa: F401
 
 
+class SessionError(Exception):
+    pass
+
+
 class Session:
     values: Workspace
     deltas: Workspace
@@ -26,10 +30,16 @@ class Session:
         self.deltas[node] = delta
 
     def get_value(self, node: 'BaseNode') -> Number:
-        return self.values[node]
+        try:
+            return self.values[node]
+        except KeyError as e:
+            raise SessionError(f'Cannot find value for {repr(node)}') from e
 
     def get_delta(self, node: 'BaseNode') -> Number:
-        return self.deltas[node]
+        try:
+            return self.deltas[node]
+        except KeyError as e:
+            raise SessionError(f'Cannot find delta for {repr(node)}') from e
 
     def has_value(self, node: 'BaseNode') -> bool:
         return node in self.values

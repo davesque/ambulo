@@ -154,10 +154,6 @@ class Node(BaseNode):
         pass
 
 
-class VarError(Exception):
-    pass
-
-
 class Var(BaseNode):
     def eval(self, sess: Session) -> Number:
         return sess.get_value(self)
