@@ -1,10 +1,14 @@
 import pprint
+import typing
 from typing import Optional
 
 from .types import (
     Number,
     Workspace,
 )
+
+if typing.TYPE_CHECKING:
+    from .node import BaseNode  # noqa: F401
 
 
 class Session:

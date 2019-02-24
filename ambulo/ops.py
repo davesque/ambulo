@@ -1,23 +1,27 @@
 import math
 import operator
+import typing
 
 from .node import Node
 from .types import (
     Number,
 )
 
+if typing.TYPE_CHECKING:
+    from .session import Session  # noqa: F401
+
 
 class Id(Node):
-    def do_df(self, sess) -> Number:
+    def do_df(self, sess: 'Session') -> Number:
         if len(self.outputs) == 0:
             return sess.get_delta(self)
 
         return super().do_df(sess)
 
-    def f(self, x):
+    def f(self, x: Number) -> Number:
         return x
 
-    def df(self, x, dx):
+    def df(self, x: Number, dx: Number) -> Number:
         return dx
 
     @property
@@ -32,7 +36,7 @@ class Id(Node):
 
 
 class Unary(Node):
-    def f(self, x):
+    def f(self, x: Number) -> Number:
         return self.op(x)
 
     @property
@@ -50,7 +54,7 @@ class Ln(Unary):
     op = staticmethod(math.log)
     op_str = 'ln'
 
-    def df(self, x, dx):
+    def df(self, x: Number, dx: Number) -> Number:
         return dx / x
 
 
@@ -58,7 +62,7 @@ class Sin(Unary):
     op = staticmethod(math.sin)
     op_str = 'sin'
 
-    def df(self, x, dx):
+    def df(self, x: Number, dx: Number) -> Number:
         return math.cos(x) * dx
 
 
@@ -66,7 +70,7 @@ class Binary(Node):
     op = None
     op_str = None
 
-    def f(self, x, y):
+    def f(self, x: Number, y: Number) -> Number:
         return self.op(x, y)
 
     @property
@@ -90,7 +94,11 @@ class Add(Binary):
     op = staticmethod(operator.add)
     op_str = ' + '
 
-    def df(self, x, y, dx, dy):
+    def df(self,
+           x: Number,
+           y: Number,
+           dx: Number,
+           dy: Number) -> Number:
         return dx + dy
 
 
@@ -98,7 +106,11 @@ class Sub(Binary):
     op = staticmethod(operator.sub)
     op_str = ' - '
 
-    def df(self, x, y, dx, dy):
+    def df(self,
+           x: Number,
+           y: Number,
+           dx: Number,
+           dy: Number) -> Number:
         return dx - dy
 
 
@@ -108,7 +120,11 @@ class Mul(Binary):
 
     wrap_in_parens = False
 
-    def df(self, x, y, dx, dy):
+    def df(self,
+           x: Number,
+           y: Number,
+           dx: Number,
+           dy: Number) -> Number:
         return x * dy + dx * y
 
 
@@ -116,5 +132,9 @@ class Div(Binary):
     op = staticmethod(operator.truediv)
     op_str = ' / '
 
-    def df(self, x, y, dx, dy):
+    def df(self,
+           x: Number,
+           y: Number,
+           dx: Number,
+           dy: Number) -> Number:
         return (dx * y - x * dy) / y ** 2
