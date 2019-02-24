@@ -1,9 +1,7 @@
 import functools
 import operator
 from typing import (
-    Any,
     Callable,
-    Iterable,
     Iterator,
     List,
     Sequence,
@@ -13,7 +11,9 @@ from typing import (
 )
 
 from .types import (
+    Dims,
     Number,
+    Vector,
 )
 
 
@@ -32,10 +32,8 @@ def chunks(seq: Sequence[T], n: int) -> Iterator[Sequence[T]]:
         i += n
 
 
-def flatten(
-    seq: Sequence,
-    seqtypes: Tuple[Type[Sequence], ...] = (list, tuple),
-) -> List:
+def flatten(seq: Sequence,
+            seqtypes: Tuple[Type[Sequence], ...] = (list, tuple)) -> List:
     """
     Converts the sequence ``seq``, containing arbitrarily deep nestings of
     sequence types ``seqtypes``, into a flat list.
@@ -66,12 +64,12 @@ def unflatten(seq: Sequence, multipliers: Sequence[int]) -> List:
     ]
 
 
-def to_tuple(old_fn: Callable[..., Any]) -> Callable[..., Tuple[Any, ...]]:
+def to_tuple(old_fn: Callable[..., Iterator[T]]) -> Callable[..., Tuple[T, ...]]:
     """
     Decorates the function ``old_fn`` to convert its results into a tuple.
     """
     @functools.wraps(old_fn)
-    def new_fn(*args, **kwargs) -> Tuple[Any, ...]:
+    def new_fn(*args, **kwargs) -> Tuple[T, ...]:
         return tuple(old_fn(*args, **kwargs))
 
     return new_fn
@@ -80,11 +78,11 @@ def to_tuple(old_fn: Callable[..., Any]) -> Callable[..., Tuple[Any, ...]]:
 def get_seq_dims(
     seq: Sequence,
     seqtypes: Tuple[Type[Sequence], ...] = (list, tuple),
-) -> Tuple[int, ...]:
+) -> Dims:
     """
-    Returns the dimensions of each level of nesting in a nested sequence ``seq``
-    and verifies that the dimensions are square across the structure of the
-    sequence.
+    Returns the dimensions of each level of nesting in a nested sequence
+    ``seq`` and verifies that the dimensions are square across the structure of
+    the sequence.
     """
     dims = []
     seq_ = seq
@@ -99,7 +97,7 @@ def get_seq_dims(
     return tuple(dims)
 
 
-def seq_has_dims(seq, dims):
+def seq_has_dims(seq: Sequence, dims: Dims) -> bool:
     """
     Verifies that a nested sequence ``seq`` is square with respect to the given
     dimensions in ``dims``.
@@ -114,22 +112,25 @@ def seq_has_dims(seq, dims):
     return all(seq_has_dims(seq_, dims_) for seq_ in seq)
 
 
-def product(seq: Sequence[Number]) -> Number:
+def product(seq: Vector) -> Number:
     """
     Returns the product of all elements in ``seq``.
     """
     return functools.reduce(operator.mul, seq)
 
 
-def dot(A: Iterable[Number], B: Iterable[Number]) -> Number:
+def dot(A: Vector, B: Vector) -> Number:
     """
-    Returns the dot product of the iterable vectors ``A`` and ``B``.
+    Returns the dot product of the elements in the sequences ``A`` and ``B``.
     """
+    if len(A) != len(B):
+        raise ValueError('Cannot take dot produce of sequences with different lengths')
+
     return sum(a * b for a, b in zip(A, B))
 
 
 @to_tuple
-def get_idx_multipliers(dims: Sequence[Number]) -> Iterable[Number]:
+def get_idx_multipliers(dims: Dims) -> Iterator[Number]:
     """
     For dimensions with sizes given in ``dims``, returns the number of elements
     identified by walking down each dimension.
