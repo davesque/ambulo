@@ -11,6 +11,19 @@ if typing.TYPE_CHECKING:
     from .session import Session  # noqa: F401
 
 
+class Const(Node):
+    def __init__(self, value: Number):
+        self.value = value
+
+        super().__init__(label=str(value))
+
+    def f(self):
+        return self.value
+
+    def df(self):
+        return 0
+
+
 class Id(Node):
     def do_df(self, sess: 'Session') -> Number:
         if len(self.outputs) == 0:
