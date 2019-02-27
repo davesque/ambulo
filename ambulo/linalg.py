@@ -30,7 +30,7 @@ class Tensor:
 
     @property
     def n(self):
-        return self.dims[1]
+        return self.dims[-1]
 
     def __getitem__(self, key):
         return self._lst[dot(key, self._idx_mul)]
