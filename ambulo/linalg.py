@@ -78,7 +78,10 @@ class Tensor:
 
         return type(self)([
             [
-                sum(self[i, j] * other[j, k] for j in range(self.n))
+                sum(
+                    self[i, j] * other[j, k]
+                    for j in range(self.n)
+                )
                 for k in range(other.n)
             ]
             for i in range(self.m)
