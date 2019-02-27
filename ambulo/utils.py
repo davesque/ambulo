@@ -75,10 +75,8 @@ def to_tuple(old_fn: Callable[..., Iterator[T]]) -> Callable[..., Tuple[T, ...]]
     return new_fn
 
 
-def get_seq_dims(
-    seq: Sequence,
-    seqtypes: Tuple[Type[Sequence], ...] = (list, tuple),
-) -> Dims:
+def get_seq_dims(seq: Sequence,
+                 seqtypes: Tuple[Type[Sequence], ...] = (list, tuple)) -> Dims:
     """
     Returns the dimensions of each level of nesting in a nested sequence
     ``seq`` and verifies that the dimensions are square across the structure of
