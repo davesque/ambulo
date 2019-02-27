@@ -5,8 +5,8 @@ import pytest
 from ambulo.utils import (
     chunks,
     flatten,
-    unflatten,
     seq_has_dims,
+    unflatten,
 )
 
 

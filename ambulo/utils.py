@@ -1,6 +1,7 @@
 import functools
 import operator
 from typing import (
+    Any,
     Callable,
     Iterator,
     List,
@@ -15,7 +16,6 @@ from .types import (
     Number,
     Vector,
 )
-
 
 T = TypeVar('T')
 
@@ -69,7 +69,7 @@ def to_tuple(old_fn: Callable[..., Iterator[T]]) -> Callable[..., Tuple[T, ...]]
     Decorates the function ``old_fn`` to convert its results into a tuple.
     """
     @functools.wraps(old_fn)
-    def new_fn(*args, **kwargs) -> Tuple[T, ...]:
+    def new_fn(*args: Any, **kwargs: Any) -> Tuple[T, ...]:
         return tuple(old_fn(*args, **kwargs))
 
     return new_fn

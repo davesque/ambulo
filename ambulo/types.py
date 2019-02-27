@@ -1,12 +1,6 @@
-from decimal import (
-    Decimal,
-)
-from fractions import (
-    Fraction,
-)
 import typing
 from typing import (
-    Mapping,
+    MutableMapping,
     Sequence,
     Union,
 )
@@ -16,9 +10,9 @@ if typing.TYPE_CHECKING:
 
 
 Label = str
-Number = Union[float, int, Decimal, Fraction]
+Number = Union[float, int]
 Vector = Sequence[Number]
 Dims = Sequence[int]
-Workspace = Mapping['BaseNode', Number]
+Workspace = MutableMapping['BaseNode', Number]
 
 RawTensor = Sequence[Union[Vector, 'RawTensor']]

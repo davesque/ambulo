@@ -1,11 +1,11 @@
 import pytest
 
 from ambulo import (
-    Session,
     Add,
     Id,
     Ln,
     Mul,
+    Session,
     Sin,
     Sub,
     Var,

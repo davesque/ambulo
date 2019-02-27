@@ -1,6 +1,8 @@
 import pprint
 import typing
-from typing import Optional
+from typing import (
+    Optional,
+)
 
 from .types import (
     Number,
@@ -19,14 +21,16 @@ class Session:
     values: Workspace
     deltas: Workspace
 
-    def __init__(self, values: Optional[Workspace]=None, deltas: Optional[Workspace]=None):
+    def __init__(self,
+                 values: Optional[Workspace] = None,
+                 deltas: Optional[Workspace] = None):
         self.values = values or {}
         self.deltas = deltas or {}
 
-    def set_value(self, node: 'BaseNode', value: Number):
+    def set_value(self, node: 'BaseNode', value: Number) -> None:
         self.values[node] = value
 
-    def set_delta(self, node: 'BaseNode', delta: Number):
+    def set_delta(self, node: 'BaseNode', delta: Number) -> None:
         self.deltas[node] = delta
 
     def get_value(self, node: 'BaseNode') -> Number:

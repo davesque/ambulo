@@ -6,7 +6,9 @@ from typing import (
     Tuple,
 )
 
-from .session import Session
+from .session import (
+    Session,
+)
 from .types import (
     Label,
     Number,
@@ -30,16 +32,17 @@ def one_hot_vec(v: Number, i: int, n: int) -> Vector:
     if i >= n:
         raise ValueError('Element index must be less than vector length')
 
-    return (0,) * i + (v,) + (0,) * (n - i - 1)
+    pref: Tuple[Number, ...] = (0,) * i
+    suff: Tuple[Number, ...] = (0,) * (n - i - 1)
+
+    return pref + (v,) + suff
 
 
 class BaseNode(abc.ABC):
-    label: Label
+    label: Optional[Label]
     outputs: List['Node']
 
-    wrap_in_parens = False
-
-    def __init__(self, label: Label):
+    def __init__(self, label: Optional[Label] = None):
         self.outputs = []
         self.label = label
 
@@ -63,6 +66,9 @@ class BaseNode(abc.ABC):
         return delta
 
     def __str__(self) -> str:
+        if self.label is None:
+            return f'{type(self).__name__}(id(self))'
+
         return self.label
 
     @property
@@ -73,35 +79,39 @@ class BaseNode(abc.ABC):
     def full_expr(self) -> str:
         return str(self)
 
+    @property
+    def wrap_in_parens(self) -> bool:
+        return False
+
     def __repr__(self) -> str:
         return str(self)
 
     def __add__(self, other: 'BaseNode') -> 'Add':
-        from .ops import Add
+        from .ops import Add  # noqa: F811
 
         return Add(self, other)
 
     def __sub__(self, other: 'BaseNode') -> 'Sub':
-        from .ops import Sub
+        from .ops import Sub  # noqa: F811
 
         return Sub(self, other)
 
     def __mul__(self, other: 'BaseNode') -> 'Mul':
-        from .ops import Mul
+        from .ops import Mul  # noqa: F811
 
         return Mul(self, other)
 
     def __truediv__(self, other: 'BaseNode') -> 'Div':
-        from .ops import Div
+        from .ops import Div  # noqa: F811
 
         return Div(self, other)
 
 
 class Node(BaseNode):
-    inputs: Tuple['Node', ...]
+    inputs: Tuple['BaseNode', ...]
 
     def __init__(self,
-                 *inputs: Tuple['Node', ...],
+                 *inputs: 'BaseNode',
                  label: Optional[Label] = None):
         for i in inputs:
             i.outputs.append(self)
@@ -155,11 +165,11 @@ class Node(BaseNode):
         return not self.is_unary
 
     @abc.abstractmethod
-    def f(self, *args: Vector) -> Number:
+    def f(self, *args: Number) -> Number:
         pass
 
     @abc.abstractmethod
-    def df(self, *args: Vector) -> Number:
+    def df(self, *args: Number) -> Number:
         pass
 
 
