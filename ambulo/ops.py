@@ -17,10 +17,10 @@ class Const(Node):
 
         super().__init__(label=str(value))
 
-    def f(self):
+    def f(self) -> Number:
         return self.value
 
-    def df(self):
+    def df(self) -> Number:
         return 0
 
 

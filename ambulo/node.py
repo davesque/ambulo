@@ -1,4 +1,5 @@
 import abc
+import typing
 from typing import (
     List,
     Optional,
@@ -11,6 +12,14 @@ from .types import (
     Number,
     Vector,
 )
+
+if typing.TYPE_CHECKING:
+    from .ops import (  # noqa: F401
+        Add,
+        Sub,
+        Mul,
+        Div,
+    )
 
 
 def one_hot_vec(v: Number, i: int, n: int) -> Vector:
