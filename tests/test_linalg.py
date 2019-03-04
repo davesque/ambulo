@@ -113,6 +113,48 @@ class TestTensor:
         with pytest.raises(TensorError):
             tensor.reshape(*new_shape)
 
+    @pytest.mark.parametrize(
+        'tensor, new_order, expected',
+        (
+            (
+                Tensor([
+                    [1, 2],
+                ]),
+                (1, 0),
+                Tensor([
+                    [1],
+                    [2],
+                ]),
+            ),
+            (
+                Tensor([
+                    [1, 2, 3],
+                    [4, 5, 6],
+                ]),
+                (1, 0),
+                Tensor([
+                    [1, 4],
+                    [2, 5],
+                    [3, 6],
+                ]),
+            ),
+            (
+                Tensor([
+                    [[1, 2], [3, 4]],
+                    [[5, 6], [7, 8]],
+                    [[9, 10], [11, 12]],
+                ]),
+                (1, 2, 0),
+                Tensor([
+                    [[1, 5, 9], [2, 6, 10]],
+                    [[3, 7, 11], [4, 8, 12]],
+                ]),
+            ),
+        ),
+    )
+    def test_rearrange(self, tensor, new_order, expected):
+        assert tensor.rearrange(*new_order) == expected
+
     def test_tensor_init_raises_value_error(self):
         with pytest.raises(TensorError):
             Tensor([
