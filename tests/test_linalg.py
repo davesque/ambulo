@@ -64,9 +64,9 @@ class TestTensor:
         'tensor, new_shape, expected',
         (
             (
-                Tensor('1 1'),
+                Tensor([1, 1]),
                 (2, 1),
-                Tensor('1\n1'),
+                Tensor([[1], [1]]),
             ),
             (
                 Tensor([1, 2, 3, 4, 5, 6, 7, 8, 9]),
@@ -92,7 +92,7 @@ class TestTensor:
         'tensor, new_shape',
         (
             (
-                Tensor('1 1'),
+                Tensor([1, 1]),
                 (1,),
             ),
             (
