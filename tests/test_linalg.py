@@ -32,6 +32,34 @@ class TestTensor:
         assert B.m == 3
         assert B.n == 2
 
+    @pytest.mark.parametrize(
+        'tensor, expected',
+        (
+            (Tensor([1]), 1),
+            (Tensor([1, 1]), 1),
+            (Tensor([[1], [1]]), 2),
+            (Tensor([[1, 1], [1, 1]]), 2),
+            (Tensor([[[1], [1]], [[1], [1]]]), 3),
+            (Tensor([[[1, 1], [1, 1]], [[1, 1], [1, 1]]]), 3),
+        ),
+    )
+    def test_rank(self, tensor, expected):
+        assert tensor.rank == expected
+
+    @pytest.mark.parametrize(
+        'tensor, expected',
+        (
+            (Tensor([1]), (1,)),
+            (Tensor([1, 1]), (2,)),
+            (Tensor([[1], [1]]), (2, 1)),
+            (Tensor([[1, 1], [1, 1]]), (2, 2)),
+            (Tensor([[[1], [1]], [[1], [1]]]), (2, 2, 1)),
+            (Tensor([[[1, 1], [1, 1]], [[1, 1], [1, 1]]]), (2, 2, 2)),
+        ),
+    )
+    def test_shape(self, tensor, expected):
+        assert tensor.shape == expected
+
     def test_tensor_init_raises_value_error(self):
         with pytest.raises(TensorError):
             Tensor([
