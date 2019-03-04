@@ -78,7 +78,6 @@ class Tensor:
 
         if set(indices) != set(expected) or len(indices) != rank:
             raise TensorError(
-                'Wrong indices given.  '
                 f'Expected exactly the following indices in some order: {expected}',
             )
 
@@ -126,7 +125,7 @@ class Tensor:
 
     def __add__(self, other):
         if self._shape != other._shape:
-            raise TensorError('Tensors must have same dimensions')
+            raise TensorError('Tensors must have same shape')
 
         return type(self)([x + y for x, y in zip(self, other)], self._shape)
 
@@ -139,7 +138,7 @@ class Tensor:
 
     def __matmul__(self, other):
         if self._shape[-1] != other._shape[0]:
-            raise TensorError('Tensors must have compatible dimensions')
+            raise TensorError('Tensors must have compatible shape')
 
         return type(self)([
             [
