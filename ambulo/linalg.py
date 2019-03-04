@@ -36,10 +36,17 @@ class Tensor:
 
     @property
     def rank(self):
+        """
+        The rank of a tensor i.e. the number of indices of a tensor.
+        """
         return len(self._shape)
 
     @property
     def shape(self):
+        """
+        The shape of a tensor's indices i.e. the number of values each index
+        can take.
+        """
         return self._shape
 
     def reshape(self, *shape):
@@ -68,11 +75,11 @@ class Tensor:
 
     def rearrange(self, *indices):
         """
-        Return a new tensor with rearranged indices.  Indices are identified by
-        their position in the tensor's shape tuple e.g. for a tensor of rank 2,
-        ``0`` refers to the first index and ``1`` to the second.  This methods
-        expects for all indices in the tensor to be identified in some order.
-        For example, to take the transpose of a rank 2 tensor::
+        Returns a new tensor with rearranged indices.  Indices are identified
+        by their position in the tensor's shape tuple e.g. for a tensor of rank
+        2, ``0`` refers to the first index and ``1`` to the second.  This
+        methods expects for all indices in the tensor to be identified in some
+        order.  For example, to take the transpose of a rank 2 tensor::
 
             >>> tensor.rearrange(1, 0)
 
@@ -99,22 +106,41 @@ class Tensor:
 
     @property
     def m(self):
+        """
+        The number of possible values for a tensor's first index.
+        """
         return self._shape[0]
 
     @property
     def n(self):
+        """
+        The number of possible values for a tensor's last index.
+        """
         return self._shape[-1]
 
     def __getitem__(self, key):
+        """
+        Returns the item at the given index.
+        """
         return self._lst[dot(key, self._idx_mul)]
 
     def __setitem__(self, key, value):
+        """
+        Sets the value of the item at the given index.
+        """
         self._lst[dot(key, self._idx_mul)] = value
 
     def __iter__(self):
+        """
+        Returns an iterator that iterates through all the values in a tensor
+        depth-first.
+        """
         return iter(self._lst)
 
     def __eq__(self, other):
+        """
+        Returns ``True`` if all values in a tensor are equal.
+        """
         if self._shape != other._shape:
             return False
 
@@ -125,11 +151,17 @@ class Tensor:
         return True
 
     def __mul__(self, other):
+        """
+        Multiplies a tensor by a scalar value.
+        """
         return type(self)([other * x for x in self], self._shape)
 
     __rmul__ = __mul__
 
     def __add__(self, other):
+        """
+        Returns the element-wise sum of two tensors.
+        """
         if self._shape != other._shape:
             raise TensorError('Tensors must have same shape')
 
@@ -140,9 +172,16 @@ class Tensor:
 
     @property
     def T(self):
+        """
+        The transpose of a tensor i.e. a new tensor with all indices reversed.
+        """
         return self.rearrange(*reversed(range(self.rank)))
 
     def __matmul__(self, other):
+        """
+        Returns the matrix product of two tensors i.e. the contraction between
+        the first tensor's last index and the second tensor's first.
+        """
         if self._shape[-1] != other._shape[0]:
             raise TensorError('Tensors must have compatible shape')
 
@@ -158,6 +197,9 @@ class Tensor:
         ])
 
     def to_list(self):
+        """
+        Returns a python list representation of a tensor.
+        """
         return unflatten(self._lst, self._idx_mul[:-1])
 
     def __str__(self):
