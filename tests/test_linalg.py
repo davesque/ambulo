@@ -2,6 +2,7 @@ import pytest
 
 from ambulo.linalg import (
     Tensor,
+    TensorError,
 )
 
 
@@ -32,7 +33,7 @@ def test_tensor_init_sets_dimension_properties(A, B):
 
 
 def test_tensor_init_raises_value_error():
-    with pytest.raises(ValueError):
+    with pytest.raises(TensorError):
         Tensor([
             [1, 2, 3],
             [1, 2, 3, 4],
@@ -91,7 +92,7 @@ def test_tensor_scalar_mul(B):
 
 
 def test_tensor_tensor_add_raises_value_error(A, B):
-    with pytest.raises(ValueError):
+    with pytest.raises(TensorError):
         A + B
 
 
@@ -135,7 +136,7 @@ def test_tensor_T(A):
 
 
 def test_tensor_tensor_mul_raises_value_error(A, B):
-    with pytest.raises(ValueError):
+    with pytest.raises(TensorError):
         A @ B
 
 
