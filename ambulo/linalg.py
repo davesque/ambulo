@@ -62,8 +62,10 @@ class Tensor:
 
     def rearrange(self, *indices):
         """
-        Return a new tensor with rearranged indices.  Expects a list of unique
-        and exhaustive numbers that will index into the source tensor's shape.
+        Return a new tensor with rearranged indices.  Indices are identified by
+        their position in the tensor's shape tuple e.g. for a tensor of rank 2,
+        ``0`` refers to the first index and ``1`` to the second.  This methods
+        expects for all indices in the tensor to be identified in some order.
         For example, to take the transpose of a rank 2 tensor::
 
             >>> tensor.rearrange(1, 0)
