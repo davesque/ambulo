@@ -6,6 +6,7 @@ from .utils import (
     get_idx_multipliers,
     get_seq_dims,
     product,
+    str_to_lst,
     unflatten,
 )
 
@@ -15,7 +16,12 @@ class TensorError(Exception):
 
 
 class Tensor:
-    def __init__(self, lst, shape=None):
+    def __init__(self, spec, shape=None):
+        if isinstance(spec, str):
+            lst = str_to_lst(spec)
+        else:
+            lst = spec
+
         self._lst = flatten(lst)
 
         if shape is None:
