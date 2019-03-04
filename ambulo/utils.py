@@ -114,21 +114,28 @@ def seq_has_dims(seq: Sequence, dims: Dims) -> bool:
     return all(seq_has_dims(seq_, dims_) for seq_ in seq)
 
 
-def product(seq: Vector) -> Number:
+def product(x: Vector) -> Number:
     """
-    Returns the product of all elements in ``seq``.
+    Returns the product of all elements in ``x``.
     """
-    return functools.reduce(operator.mul, seq)
+    if len(x) == 0:
+        raise ValueError('Cannot determine product of vector with no elements')
+
+    return functools.reduce(operator.mul, x)
 
 
-def dot(A: Vector, B: Vector) -> Number:
+def dot(x: Vector, y: Vector) -> Number:
     """
-    Returns the dot product of the elements in the sequences ``A`` and ``B``.
+    Returns the dot product of the elements in the vectors ``x`` and ``y``.
     """
-    if len(A) != len(B):
-        raise ValueError('Cannot take dot produce of sequences with different lengths')
+    len_x, len_y = len(x), len(y)
 
-    return sum(a * b for a, b in zip(A, B))
+    if len_x != len_y:
+        raise ValueError('Cannot take dot product of vectors with different dimensions')
+    if len_x == 0 or len_y == 0:
+        raise ValueError('Cannot take dot product of vectors with no elements')
+
+    return sum(a * b for a, b in zip(x, y))
 
 
 @to_tuple

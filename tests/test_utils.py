@@ -4,8 +4,10 @@ import pytest
 
 from ambulo.utils import (
     chunks,
+    dot,
     flatten,
     get_seq_dims,
+    product,
     seq_has_dims,
     to_tuple,
     unflatten,
@@ -162,3 +164,54 @@ def test_seq_has_dims():
         [[0, 0], [0, 0]],
         [[0, 0], [0, 0]],
     ], (4, 3, 2))
+
+
+@pytest.mark.parametrize(
+    'vec, expected',
+    (
+        ([1], 1),
+        ([1, 2], 2),
+        ([1, 2, 3], 6),
+        ([1, 2, 3, 4], 24),
+    ),
+)
+def test_product(vec, expected):
+    assert product(vec) == expected
+
+
+@pytest.mark.parametrize(
+    'vec',
+    ([],),
+)
+def test_product_raises_type_error(vec):
+    with pytest.raises(ValueError):
+        product(vec)
+
+
+@pytest.mark.parametrize(
+    'x, y, expected',
+    (
+        ([1], [1], 1),
+        ([1, 2], [1, 3], 7),
+        ([4, 2], [5, 3], 26),
+        ([4, 2, 7], [5, 3, 8], 82),
+    ),
+)
+def test_dot(x, y, expected):
+    assert dot(x, y) == expected
+
+
+@pytest.mark.parametrize(
+    'x, y',
+    (
+        ([], []),
+        ([1], []),
+        ([], [1]),
+        ([1], [1, 3]),
+        ([4, 2], [3]),
+        ([4, 2, 7], [3, 8]),
+    ),
+)
+def test_dot_raises_value_error(x, y):
+    with pytest.raises(ValueError):
+        dot(x, y)
