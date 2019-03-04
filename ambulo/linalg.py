@@ -26,13 +26,11 @@ class Tensor:
         else:
             shape = tuple(shape)
 
-        self._check_shape(shape)
-        self._shape = shape
-        self._idx_mul = get_idx_multipliers(shape)
-
-    def _check_shape(self, shape):
         if len(self._lst) != product(shape):
             raise TensorError('Tensor cannot be fit into given shape')
+
+        self._shape = shape
+        self._idx_mul = get_idx_multipliers(shape)
 
     @property
     def rank(self):
@@ -50,8 +48,9 @@ class Tensor:
         return self._shape
 
     def reshape(self, *shape):
-        self._check_shape(shape)
-
+        """
+        Returns a new tensor with the given shape.
+        """
         return type(self)(self._lst, shape)
 
     def _rearrange(self, indices, all_idx, result):
