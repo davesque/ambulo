@@ -3,6 +3,7 @@ import operator
 from typing import (
     Any,
     Callable,
+    Iterable,
     Iterator,
     List,
     Sequence,
@@ -64,7 +65,7 @@ def unflatten(seq: Sequence, multipliers: Sequence[int]) -> List:
     ]
 
 
-def to_tuple(old_fn: Callable[..., Iterator[T]]) -> Callable[..., Tuple[T, ...]]:
+def to_tuple(old_fn: Callable[..., Iterable[T]]) -> Callable[..., Tuple[T, ...]]:
     """
     Decorates the function ``old_fn`` to convert its results into a tuple.
     """
@@ -87,7 +88,10 @@ def get_seq_dims(seq: Sequence,
 
     while isinstance(seq_, seqtypes):
         dims.append(len(seq_))
-        seq_ = seq_[0]
+        try:
+            seq_ = seq_[0]
+        except IndexError:
+            break
 
     if not seq_has_dims(seq, dims):
         raise ValueError('Sequence dimensions are not square')
