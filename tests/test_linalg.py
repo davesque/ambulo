@@ -68,10 +68,50 @@ class TestTensor:
                 (2, 1),
                 Tensor('1\n1'),
             ),
+            (
+                Tensor([1, 2, 3, 4, 5, 6, 7, 8, 9]),
+                (3, 3),
+                Tensor([[1, 2, 3], [4, 5, 6], [7, 8, 9]]),
+            ),
+            (
+                Tensor([[1, 2, 3, 4], [5, 6, 7, 8], [9, 10, 11, 12]]),
+                (4, 3),
+                Tensor([[1, 2, 3], [4, 5, 6], [7, 8, 9], [10, 11, 12]]),
+            ),
+            (
+                Tensor([[1, 2, 3, 4], [5, 6, 7, 8], [9, 10, 11, 12]]),
+                (2, 6),
+                Tensor([[1, 2, 3, 4, 5, 6], [7, 8, 9, 10, 11, 12]]),
+            ),
         ),
     )
     def test_reshape(self, tensor, new_shape, expected):
         assert tensor.reshape(*new_shape) == expected
+
+    @pytest.mark.parametrize(
+        'tensor, new_shape',
+        (
+            (
+                Tensor('1 1'),
+                (1,),
+            ),
+            (
+                Tensor([1, 2, 3, 4, 5, 6, 7, 8, 9]),
+                (3, 4),
+            ),
+            (
+                Tensor([[1, 2, 3, 4], [5, 6, 7, 8], [9, 10, 11, 12]]),
+                (4, 3, 2),
+            ),
+            (
+                Tensor([[1, 2, 3, 4], [5, 6, 7, 8], [9, 10, 11, 12]]),
+                (2, 7),
+            ),
+        ),
+    )
+    def test_reshape_raises_tensor_error(self, tensor, new_shape):
+        with pytest.raises(TensorError):
+            tensor.reshape(*new_shape)
 
     def test_tensor_init_raises_value_error(self):
         with pytest.raises(TensorError):
