@@ -60,6 +60,19 @@ class TestTensor:
     def test_shape(self, tensor, expected):
         assert tensor.shape == expected
 
+    @pytest.mark.parametrize(
+        'tensor, new_shape, expected',
+        (
+            (
+                Tensor('1 1'),
+                (2, 1),
+                Tensor('1\n1'),
+            ),
+        ),
+    )
+    def test_reshape(self, tensor, new_shape, expected):
+        assert tensor.reshape(*new_shape) == expected
+
     def test_tensor_init_raises_value_error(self):
         with pytest.raises(TensorError):
             Tensor([

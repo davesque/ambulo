@@ -29,8 +29,16 @@ class Tensor:
                 shape = tuple(get_seq_dims(lst))
             except ValueError as e:
                 raise TensorError(e.args[0]) from e
+        else:
+            shape = tuple(shape)
 
-        self.reshape(*shape)
+        self._check_shape(shape)
+        self._shape = shape
+        self._idx_mul = get_idx_multipliers(shape)
+
+    def _check_shape(self, shape):
+        if len(self._lst) != product(shape):
+            raise TensorError('Tensor cannot be fit into given shape')
 
     @property
     def rank(self):
@@ -41,11 +49,9 @@ class Tensor:
         return self._shape
 
     def reshape(self, *shape):
-        if len(self._lst) != product(shape):
-            raise TensorError('Tensor cannot be fit into given shape')
+        self._check_shape(shape)
 
-        self._shape = shape
-        self._idx_mul = get_idx_multipliers(shape)
+        return type(self)(self._lst, shape)
 
     def _rearrange(self, indices, all_idx, result):
         curr_idx, rest_indices = indices[0], indices[1:]
@@ -94,7 +100,7 @@ class Tensor:
             new_lst,
         )
 
-        new_shape = [self._shape[i] for i in indices]
+        new_shape = tuple(self._shape[i] for i in indices)
         return type(self)(new_lst, new_shape)
 
     @property
