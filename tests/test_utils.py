@@ -6,6 +6,7 @@ from ambulo.utils import (
     chunks,
     dot,
     flatten,
+    get_idx_multipliers,
     get_seq_dims,
     product,
     seq_has_dims,
@@ -215,3 +216,14 @@ def test_dot(x, y, expected):
 def test_dot_raises_value_error(x, y):
     with pytest.raises(ValueError):
         dot(x, y)
+
+
+@pytest.mark.parametrize(
+    'dims, expected',
+    (
+        ((3, 3, 3, 3), (27, 9, 3, 1)),
+        ((4, 3, 2), (6, 2, 1)),
+    ),
+)
+def test_get_idx_multipliers(dims, expected):
+    assert get_idx_multipliers(dims) == expected
