@@ -160,6 +160,35 @@ class TestTensor:
     def test_rearrange(self, tensor, new_order, expected):
         assert tensor.rearrange(*new_order) == expected
 
+    @pytest.mark.parametrize(
+        'tensor, new_order',
+        (
+            (
+                Tensor([[1, 2]]),
+                (1, 1),
+            ),
+            (
+                Tensor(list(range(1, 7))).reshape(2, 3),
+                (2, 1, 0),
+            ),
+            (
+                Tensor(list(range(1, 25))).reshape(4, 3, 2),
+                (1, 1, 0),
+            ),
+            (
+                Tensor(list(range(1, 25))).reshape(4, 3, 2),
+                (2, 0, 1, 5),
+            ),
+            (
+                Tensor(list(range(1, 25))).reshape(4, 3, 2),
+                (2,),
+            ),
+        ),
+    )
+    def test_rearrange_raises_tensor_error(self, tensor, new_order):
+        with pytest.raises(TensorError):
+            tensor.rearrange(*new_order)
+
     def test_tensor_init_raises_value_error(self):
         with pytest.raises(TensorError):
             Tensor([
