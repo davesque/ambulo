@@ -32,6 +32,13 @@ class TestTensor:
         assert B.m == 3
         assert B.n == 2
 
+    def test_tensor_init_raises_value_error(self):
+        with pytest.raises(TensorError):
+            Tensor([
+                [1, 2, 3],
+                [1, 2, 3, 4],
+            ])
+
     @pytest.mark.parametrize(
         'tensor, expected',
         (
@@ -189,32 +196,58 @@ class TestTensor:
         with pytest.raises(TensorError):
             tensor.rearrange(*new_order)
 
-    def test_tensor_init_raises_value_error(self):
-        with pytest.raises(TensorError):
-            Tensor([
-                [1, 2, 3],
-                [1, 2, 3, 4],
-            ])
+    @pytest.mark.parametrize(
+        'tensor, expected',
+        (
+            (Tensor([[1, 2]]), 1),
+            (Tensor(list(range(1, 7))).reshape(2, 3), 2),
+            (Tensor(list(range(1, 25))).reshape(4, 3, 2), 4),
+            (Tensor(list(range(1, 25))).reshape(3, 2, 4), 3),
+            (Tensor(list(range(1, 25))).reshape(2, 4, 3), 2),
+        ),
+    )
+    def test_m(self, tensor, expected):
+        assert tensor.m == expected
 
-    def test_tensor_getitem(self, A, B):
-        assert A[0, 0] == 1
-        assert A[0, 1] == 2
+    @pytest.mark.parametrize(
+        'tensor, expected',
+        (
+            (Tensor([[1, 2]]), 2),
+            (Tensor(list(range(1, 7))).reshape(2, 3), 3),
+            (Tensor(list(range(1, 25))).reshape(4, 3, 2), 2),
+            (Tensor(list(range(1, 25))).reshape(3, 2, 4), 4),
+            (Tensor(list(range(1, 25))).reshape(2, 4, 3), 3),
+        ),
+    )
+    def test_n(self, tensor, expected):
+        assert tensor.n == expected
 
-        assert B[0, 0] == 1
-        assert B[1, 0] == 3
+    @pytest.mark.parametrize(
+        'tensor, idx, expected',
+        (
+            (Tensor([[1, 2]]), (0, 0), 1),
+            (Tensor([[1, 2]]), (0, 1), 2),
+            (Tensor([1, 2]), (0,), 1),
+            (Tensor([1, 2]), (1,), 2),
+            (Tensor(list(range(1, 25))).reshape(4, 3, 2), (2, 1, 1), 16),
+        ),
+    )
+    def test_getitem(self, tensor, idx, expected):
+        assert tensor[idx] == expected
 
-    def test_tensor_setitem(self, A):
-        assert A[0, 0] == 1
-        A[0, 0] = 2
-        assert A[0, 0] == 2
+    def test_setitem(self):
+        A = Tensor([0 for _ in range(24)]).reshape(4, 3, 2)
+        A[2, 1, 1] = 16
+        assert A[2, 1, 1] == 16
 
-    def test_tensor_iter(self, A):
-        i = 1
-        for x in A:
-            assert x == i
-            i += 1
+    def test_iter(self):
+        A = Tensor(list(range(24)))
 
-    def test_tensor_eq(self, A, B):
+        assert list(A.reshape(4, 3, 2)) == list(range(24))
+        assert list(A.reshape(2, 3, 4)) == list(range(24))
+        assert list(A.reshape(1, 1, 24)) == list(range(24))
+
+    def test_eq(self, A, B):
         assert A == Tensor([
             [1, 2, 3, 4],
             [5, 6, 7, 8],
@@ -229,7 +262,7 @@ class TestTensor:
 
         assert A != B
 
-    def test_tensor_scalar_mul(self, B):
+    def test_scalar_mul(self, B):
         assert 3 * B == Tensor([
             [3, 6],
             [9, 12],
@@ -241,10 +274,6 @@ class TestTensor:
             [9, 12],
             [15, 18],
         ])
-
-    def test_tensor_tensor_add_raises_value_error(self, A, B):
-        with pytest.raises(TensorError):
-            A + B
 
     def test_tensor_tensor_add(self, B):
         assert B + B == Tensor([
@@ -262,6 +291,10 @@ class TestTensor:
             [4, 5],
             [6, 7],
         ])
+
+    def test_tensor_tensor_add_raises_value_error(self, A, B):
+        with pytest.raises(TensorError):
+            A + B
 
     def test_tensor_tensor_sub(self, B):
         assert B - Tensor([
@@ -282,14 +315,93 @@ class TestTensor:
             [4, 8, 12],
         ])
 
-    def test_tensor_tensor_mul_raises_value_error(self, A, B):
-        with pytest.raises(TensorError):
-            A @ B
-
-    def test_tensor_tensor_mul(self, A, B):
+    def test_matmul(self, A, B):
         assert A.T @ B == Tensor([
             [61, 76],
             [70, 88],
             [79, 100],
             [88, 112],
         ])
+
+    def test_matmul_raises_value_error(self, A, B):
+        with pytest.raises(TensorError):
+            A @ B
+
+    @pytest.mark.parametrize(
+        'tensor, expected',
+        (
+            (
+                Tensor([[1, 2]]),
+                [[1, 2]],
+            ),
+            (
+                Tensor(list(range(1, 7))).reshape(2, 3),
+                [
+                    [1, 2, 3],
+                    [4, 5, 6],
+                ],
+            ),
+            (
+                Tensor(list(range(1, 25))).reshape(4, 3, 2).rearrange(1, 2, 0),
+                [
+                    [[1, 7, 13, 19], [2, 8, 14, 20]],
+                    [[3, 9, 15, 21], [4, 10, 16, 22]],
+                    [[5, 11, 17, 23], [6, 12, 18, 24]],
+                ],
+            ),
+            (
+                Tensor(list(range(1, 25))).reshape(4, 3, 2).rearrange(2, 0, 1),
+                [
+                    [[1, 3, 5], [7, 9, 11], [13, 15, 17], [19, 21, 23]],
+                    [[2, 4, 6], [8, 10, 12], [14, 16, 18], [20, 22, 24]],
+                ],
+            ),
+            (
+                Tensor(list(range(1, 25))).reshape(4, 3, 2).rearrange(2, 1, 0),
+                [
+                    [[1, 7, 13, 19], [3, 9, 15, 21], [5, 11, 17, 23]],
+                    [[2, 8, 14, 20], [4, 10, 16, 22], [6, 12, 18, 24]],
+                ],
+            ),
+        ),
+    )
+    def test_tolist(self, tensor, expected):
+        assert tensor.tolist() == expected
+
+    @pytest.mark.parametrize(
+        'tensor, expected',
+        (
+            (
+                Tensor([[1, 2]]),
+                '[[1, 2]]',
+            ),
+            (
+                Tensor(list(range(1, 7))).reshape(2, 3),
+                '[[1, 2, 3], [4, 5, 6]]',
+            ),
+            (
+                Tensor(list(range(1, 25))).reshape(4, 3, 2).rearrange(1, 2, 0),
+                '''
+[[[1, 7, 13, 19], [2, 8, 14, 20]],
+ [[3, 9, 15, 21], [4, 10, 16, 22]],
+ [[5, 11, 17, 23], [6, 12, 18, 24]]]
+'''[1:-1],
+            ),
+            (
+                Tensor(list(range(1, 25))).reshape(4, 3, 2).rearrange(2, 0, 1),
+                '''
+[[[1, 3, 5], [7, 9, 11], [13, 15, 17], [19, 21, 23]],
+ [[2, 4, 6], [8, 10, 12], [14, 16, 18], [20, 22, 24]]]
+'''[1:-1],
+            ),
+            (
+                Tensor(list(range(1, 25))).reshape(4, 3, 2).rearrange(2, 1, 0),
+                '''
+[[[1, 7, 13, 19], [3, 9, 15, 21], [5, 11, 17, 23]],
+ [[2, 8, 14, 20], [4, 10, 16, 22], [6, 12, 18, 24]]]
+'''[1:-1],
+            ),
+        ),
+    )
+    def test_str(self, tensor, expected):
+        assert str(tensor) == expected

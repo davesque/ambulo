@@ -195,14 +195,14 @@ class Tensor:
             for i in range(self.m)
         ])
 
-    def to_list(self):
+    def tolist(self):
         """
         Returns a python list representation of a tensor.
         """
         return unflatten(self._lst, self._idx_mul[:-1])
 
     def __str__(self):
-        return pprint.pformat(self.to_list())
+        return pprint.pformat(self.tolist())
 
     def __repr__(self):
         return str(self)
