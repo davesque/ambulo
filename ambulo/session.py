@@ -51,7 +51,7 @@ class Session:
     def has_delta(self, node: 'BaseNode') -> bool:
         return node in self.deltas
 
-    def __repr__(self):
+    def __repr__(self) -> str:
         values = pprint.pformat(self.values)
         deltas = pprint.pformat(self.deltas)
 

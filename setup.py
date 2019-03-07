@@ -27,17 +27,13 @@ extras_require = {
         "twine",
         "ipython",
     ],
-    'sympy': [
-        "sympy>=1,<2",
-    ],
 }
 
 extras_require['dev'] = (
     extras_require['dev'] +
     extras_require['test'] +
     extras_require['lint'] +
-    extras_require['doc'] +
-    extras_require['sympy']
+    extras_require['doc']
 )
 
 setup(

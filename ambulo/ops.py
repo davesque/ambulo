@@ -29,12 +29,6 @@ class Const(Node):
 
 
 class Id(Node):
-    def do_df(self, sess: 'Session') -> Number:
-        if len(self.outputs) == 0:
-            return sess.get_delta(self)
-
-        return super().do_df(sess)
-
     def f(self, *args: Number) -> Number:
         x, = args
         return x

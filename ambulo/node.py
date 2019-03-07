@@ -52,14 +52,14 @@ class BaseNode(abc.ABC):
         pass
 
     @abc.abstractmethod
-    def df_di(self, sess: Session) -> Number:
+    def du_dx(self, sess: Session) -> Number:
         pass
 
-    def do_df(self, sess: Session) -> Number:
+    def df_du(self, sess: Session) -> Number:
         if sess.has_delta(self):
             return sess.get_delta(self)
 
-        deltas_ = (o.df_df(sess, self) for o in self.outputs)
+        deltas_ = (o.du_du(sess, self) for o in self.outputs)
 
         delta = sum(deltas_)
         sess.set_delta(self, delta)
@@ -132,21 +132,21 @@ class Node(BaseNode):
 
         return value
 
-    def df_di(self, sess: Session) -> Number:
+    def du_dx(self, sess: Session) -> Number:
         if sess.has_delta(self):
             return sess.get_delta(self)
 
         inputs_ = (i.eval(sess) for i in self.inputs)
-        deltas_ = (i.df_di(sess) for i in self.inputs)
+        deltas_ = (i.du_dx(sess) for i in self.inputs)
 
         delta = self.df(*inputs_, *deltas_)
         sess.set_delta(self, delta)
 
         return delta
 
-    def df_df(self, sess: Session, input: 'BaseNode') -> Number:
+    def du_du(self, sess: Session, input: 'BaseNode') -> Number:
         inputs_ = (i.eval(sess) for i in self.inputs)
-        delta_ = self.do_df(sess)
+        delta_ = self.df_du(sess)
 
         i = self.inputs.index(input)
         n = len(self.inputs)
@@ -178,5 +178,5 @@ class Var(BaseNode):
     def eval(self, sess: Session) -> Number:
         return sess.get_value(self)
 
-    def df_di(self, sess: Session) -> Number:
+    def du_dx(self, sess: Session) -> Number:
         return sess.get_delta(self)

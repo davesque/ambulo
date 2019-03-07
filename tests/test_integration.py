@@ -35,18 +35,18 @@ def test_forward_tangent_mode_x1(sess):
     sess.set_delta(x1, 1)
     sess.set_delta(x2, 0)
 
-    assert y.df_di(sess) == 5.5
+    assert y.du_dx(sess) == 5.5
 
 
 def test_forward_tangent_mode_x2(sess):
     sess.set_delta(x1, 0)
     sess.set_delta(x2, 1)
 
-    assert round(y.df_di(sess), 6) == 1.716338
+    assert round(y.du_dx(sess), 6) == 1.716338
 
 
 def test_reverse_adjoint_mode(sess):
     sess.set_delta(y, 1)
 
-    assert x1.do_df(sess) == 5.5
-    assert round(x2.do_df(sess), 6) == 1.716338
+    assert x1.df_du(sess) == 5.5
+    assert round(x2.df_du(sess), 6) == 1.716338
