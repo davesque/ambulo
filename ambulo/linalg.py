@@ -1,5 +1,9 @@
 import pprint
 
+from .types import (
+    Dims,
+    RawTensor,
+)
 from .utils import (
     dot,
     flatten,
@@ -15,7 +19,11 @@ class TensorError(Exception):
 
 
 class Tensor:
-    def __init__(self, lst, shape=None):
+    _lst: RawTensor
+    _shape: Dims
+    _idx_mul: Dims
+
+    def __init__(self, lst: RawTensor, shape: Dims = None):
         self._lst = flatten(lst)
 
         if shape is None:

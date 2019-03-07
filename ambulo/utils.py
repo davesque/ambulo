@@ -14,8 +14,7 @@ from typing import (
 
 from .types import (
     Dims,
-    Number,
-    Vector,
+    NumberT,
 )
 
 T = TypeVar('T')
@@ -50,7 +49,7 @@ def flatten(seq: Sequence,
     return seq
 
 
-def unflatten(seq: Sequence, multipliers: Sequence[int]) -> List:
+def unflatten(seq: Sequence, multipliers: Dims) -> List:
     """
     Converts the flat sequence ``seq`` into an abritraily nested list with the
     number of elements composing each nested element provided in ``multiplers``.
@@ -114,7 +113,7 @@ def seq_has_dims(seq: Sequence, dims: Dims) -> bool:
     return all(seq_has_dims(seq_, dims_) for seq_ in seq)
 
 
-def product(x: Vector) -> Number:
+def product(x: Sequence[NumberT]) -> NumberT:
     """
     Returns the product of all elements in ``x``.
     """
@@ -124,7 +123,7 @@ def product(x: Vector) -> Number:
     return functools.reduce(operator.mul, x)
 
 
-def dot(x: Vector, y: Vector) -> Number:
+def dot(x: Sequence[NumberT], y: Sequence[NumberT]) -> NumberT:
     """
     Returns the dot product of the elements in the vectors ``x`` and ``y``.
     """
