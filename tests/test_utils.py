@@ -10,7 +10,6 @@ from ambulo.utils import (
     get_seq_dims,
     product,
     seq_has_dims,
-    str_to_lst,
     to_tuple,
     unflatten,
 )
@@ -228,25 +227,3 @@ def test_dot_raises_value_error(x, y):
 )
 def test_get_idx_multipliers(dims, expected):
     assert get_idx_multipliers(dims) == expected
-
-
-@pytest.mark.parametrize(
-    's, expected',
-    (
-        ('1', [[1]]),
-        ('1 2', [[1, 2]]),
-        ('1.', [[1.]]),
-        ('1 2.', [[1., 2.]]),
-        ('''
-            1 1 1
-            2 2 2
-            3 3 3
-        ''', [
-            [1, 1, 1],
-            [2, 2, 2],
-            [3, 3, 3],
-        ]),
-    ),
-)
-def test_str_to_lst(s, expected):
-    assert str_to_lst(s) == expected

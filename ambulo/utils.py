@@ -158,24 +158,3 @@ def get_idx_multipliers(dims: Dims) -> Iterator[Number]:
     for d in dims:
         multiplier //= d
         yield multiplier
-
-
-def str_to_lst(txt: str, convert: Callable[[str], Number] = None) -> List[List[Number]]:
-    """
-    Converts a textual description ``txt`` of a matrix into a nested list of
-    numbers.  The value conversion function ``convert`` will be used to convert
-    values from strings if provided.
-    """
-    if convert is None:
-        if '.' in txt:
-            convert = float
-        else:
-            convert = int
-
-    rows = []
-    lines = filter(bool, (l.strip() for l in txt.splitlines()))
-
-    for l in lines:
-        rows.append([convert(i) for i in l.split()])
-
-    return rows
