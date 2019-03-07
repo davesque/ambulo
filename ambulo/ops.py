@@ -15,8 +15,8 @@ if typing.TYPE_CHECKING:
 
 class Const(Node):
     def __init__(self, value: Number):
-        self.value = value  # type: ignore
-
+        self.value = value
+        # type: ignore
         super().__init__(label=str(value))
 
     def f(self, *args: Number) -> Number:
