@@ -33,17 +33,16 @@ class Tensor:
         self._idx_mul = get_idx_multipliers(shape)
 
     @property
-    def rank(self):
+    def order(self) -> int:
         """
-        The rank of a tensor i.e. the number of indices of a tensor.
+        The number of indices of a tensor.
         """
         return len(self._shape)
 
     @property
-    def shape(self):
+    def shape(self) -> Dims:
         """
-        The shape of a tensor's indices i.e. the number of values each index
-        can take.
+        The number of values that each of a tensor's indices can take.
         """
         return self._shape
 
@@ -75,20 +74,20 @@ class Tensor:
     def rearrange(self, *indices):
         """
         Returns a new tensor with rearranged indices.  Indices are identified
-        by their position in the tensor's shape tuple e.g. for a tensor of rank
+        by their position in the tensor's shape tuple e.g. for a tensor of order
         2, ``0`` refers to the first index and ``1`` to the second.  This
         methods expects for all indices in the tensor to be identified in some
-        order.  For example, to take the transpose of a rank 2 tensor::
+        order.  For example, to take the transpose of an order 2 tensor::
 
             >>> tensor.rearrange(1, 0)
 
         This will return a new tensor with the second index swapped with the
         first.
         """
-        rank = self.rank
-        expected = tuple(range(rank))
+        order = self.order
+        expected = tuple(range(order))
 
-        if set(indices) != set(expected) or len(indices) != rank:
+        if set(indices) != set(expected) or len(indices) != order:
             raise TensorError(
                 f'Expected exactly the following indices in some order: {expected}',
             )
@@ -174,7 +173,7 @@ class Tensor:
         """
         The transpose of a tensor i.e. a new tensor with all indices reversed.
         """
-        return self.rearrange(*reversed(range(self.rank)))
+        return self.rearrange(*reversed(range(self.order)))
 
     def __matmul__(self, other):
         """

@@ -139,13 +139,13 @@ def dot(x: Vector, y: Vector) -> Number:
 
 
 @to_tuple
-def get_idx_multipliers(dims: Dims) -> Iterator[Number]:
+def get_idx_multipliers(dims: Dims) -> Iterator[int]:
     """
     For dimensions with sizes given in ``dims``, returns the number of elements
     identified by walking down each dimension.
 
-    For example, let dimensions ``(3, 3, 3, 3)`` represent the dimensions of a
-    rank-4 tensor with 4 indices and 3 possible values for each index.
+    For example, let dimensions ``(3, 3, 3, 3)`` represent the dimensions of an
+    order-4 tensor with 4 indices and 3 possible values for each index.
     Providing a value for the first index identifies 27 possible elements.
     Providing a value for the second index identifies 9 elements within those
     27.  Providing a value for the third index identifies 3 elements within

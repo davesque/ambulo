@@ -50,8 +50,8 @@ class TestTensor:
             (Tensor([[[1, 1], [1, 1]], [[1, 1], [1, 1]]]), 3),
         ),
     )
-    def test_rank(self, tensor, expected):
-        assert tensor.rank == expected
+    def test_order(self, tensor, expected):
+        assert tensor.order == expected
 
     @pytest.mark.parametrize(
         'tensor, expected',
