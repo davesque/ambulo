@@ -12,6 +12,7 @@ from .session import (
 from .types import (
     Label,
     Number,
+    NumberT,
     Vector,
 )
 
@@ -24,7 +25,7 @@ if typing.TYPE_CHECKING:
     )
 
 
-def one_hot_vec(v: Number, i: int, n: int) -> Vector:
+def one_hot_vec(v: NumberT, i: int, n: int) -> Vector[NumberT]:
     """
     Returns a one-hot vector of ``n`` elements with the value ``v`` as the
     element at zero-index ``i``.
@@ -32,8 +33,8 @@ def one_hot_vec(v: Number, i: int, n: int) -> Vector:
     if i >= n:
         raise ValueError('Element index must be less than vector length')
 
-    pref: Tuple[Number, ...] = (0,) * i
-    suff: Tuple[Number, ...] = (0,) * (n - i - 1)
+    pref: Tuple[NumberT, ...] = (0,) * i
+    suff: Tuple[NumberT, ...] = (0,) * (n - i - 1)
 
     return pref + (v,) + suff
 

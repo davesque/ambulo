@@ -19,6 +19,7 @@ class Const(Node):
 
         super().__init__(label=str(value))
         # type: ignore
+        # type: ignore
 
     def f(self, *args: Number) -> Number:
         return self.value

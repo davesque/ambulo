@@ -14,8 +14,9 @@ if typing.TYPE_CHECKING:
 Label = str
 Number = Union[float, int, 'Expr']
 NumberT = TypeVar('NumberT', float, int, 'Expr')
-Vector = Sequence[Number]
+Vector = Sequence[NumberT]
 Dims = Sequence[int]
 Workspace = MutableMapping['BaseNode', Number]
 
-RawTensor = Sequence[Union[Vector, 'RawTensor']]
+RawTensorItem = Union[NumberT, Vector, 'RawTensor']
+RawTensor = Sequence[RawTensorItem[NumberT]]
