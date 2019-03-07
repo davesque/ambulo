@@ -405,3 +405,4 @@ class TestTensor:
     )
     def test_str(self, tensor, expected):
         assert str(tensor) == expected
+        assert repr(tensor) == expected

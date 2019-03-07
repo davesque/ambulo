@@ -8,14 +8,14 @@ from setuptools import (
 extras_require = {
     'test': [
         "pytest==3.6",
-        "pytest-xdist",
+        "pytest-cov==2.4.0",
         "tox>=2.9.1,<3",
     ],
     'lint': [
         "flake8==3.4.1",
         "isort>=4.2.15,<5",
         "pydocstyle>=3.0.0,<4",
-        "mypy",
+        "mypy==0.670",
     ],
     'doc': [
         "Sphinx>=1.6.5,<2",
@@ -23,7 +23,6 @@ extras_require = {
     ],
     'dev': [
         "bumpversion>=0.5.3,<1",
-        "pytest-watch>=4.1.0,<5",
         "wheel",
         "twine",
         "ipython",
