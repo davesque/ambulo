@@ -1,7 +1,7 @@
 ambulo
-==============================
+======
 
-Automatic Differentiation with Python
+Automatic differentiation with Python.
 
 Contents
 --------
