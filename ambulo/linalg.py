@@ -195,7 +195,7 @@ class Tensor(Generic[NumberT]):
         Returns the matrix product of two tensors i.e. the contraction between
         the first tensor's last index and the second tensor's first.
         """
-        if self._shape[-1] != other._shape[0]:
+        if self.n != other.m:
             raise TensorError('Tensors must have compatible shape')
 
         return type(self)([
