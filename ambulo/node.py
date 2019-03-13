@@ -44,8 +44,8 @@ class BaseNode(abc.ABC):
     outputs: List['Node']
 
     def __init__(self, label: Optional[Label] = None):
-        self.outputs = []
         self.label = label
+        self.outputs = []
 
     @abc.abstractmethod
     def eval(self, sess: Session) -> Number:
@@ -80,12 +80,12 @@ class BaseNode(abc.ABC):
     def full_expr(self) -> str:
         return str(self)
 
+    def __repr__(self) -> str:
+        return str(self)
+
     @property
     def wrap_in_parens(self) -> bool:
         return False
-
-    def __repr__(self) -> str:
-        return str(self)
 
     def __add__(self, other: 'BaseNode') -> 'Add':
         from .ops import Add  # noqa: F811
