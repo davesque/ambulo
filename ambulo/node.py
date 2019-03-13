@@ -27,8 +27,8 @@ if typing.TYPE_CHECKING:
 
 def one_hot_vec(v: NumberT, i: int, n: int) -> Vector[NumberT]:
     """
-    Returns a one-hot vector of ``n`` elements with the value ``v`` as the
-    element at zero-index ``i``.
+    Returns a vector of ``n`` zero-elements except for the value ``v`` at
+    zero-index ``i``.
     """
     if i >= n:
         raise ValueError('Element index must be less than vector length')

@@ -91,7 +91,7 @@ class Tensor(Generic[NumberT]):
         Returns a new tensor with rearranged indices.  Indices are identified
         by their position in the tensor's shape tuple e.g. for a tensor of order
         2, ``0`` refers to the first index and ``1`` to the second.  This
-        methods expects for all indices in the tensor to be identified in some
+        method expects for all indices in the tensor to be identified in some
         order.  For example, to take the transpose of an order 2 tensor::
 
             >>> tensor.rearrange(1, 0)
