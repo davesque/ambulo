@@ -38,30 +38,30 @@ class Id(Node):
         return dx
 
     @property
-    def name_expr(self):
-        x = self.inputs[0]
-        return f'{x.label}'
+    def brief_expr(self) -> str:
+        return str(self.inputs[0])
 
     @property
-    def full_expr(self):
+    def full_expr(self) -> str:
         x = self.inputs[0]
         return f'{x.full_expr}'
 
 
 class Unary(Node):
     op = staticmethod(lambda x: x)  # to satisfy mypy
+    op_str = ''  # to satisfy mypy
 
     def f(self, *args: Number) -> Number:
         x, = args
         return self.op(x)
 
     @property
-    def name_expr(self):
+    def brief_expr(self) -> str:
         x = self.inputs[0]
-        return f'{self.op_str}({x.label})'
+        return f'{self.op_str}({x})'
 
     @property
-    def full_expr(self):
+    def full_expr(self) -> str:
         x = self.inputs[0]
         return f'{self.op_str}({x.full_expr})'
 
@@ -93,12 +93,12 @@ class Binary(Node):
         return self.op(x, y)
 
     @property
-    def name_expr(self):
+    def brief_expr(self) -> str:
         x, y = self.inputs
-        return f'{x.label}{self.op_str}{y.label}'
+        return f'{x}{self.op_str}{y}'
 
     @property
-    def full_expr(self):
+    def full_expr(self) -> str:
         x, y = self.inputs
 
         x_exp, y_exp = x.full_expr, y.full_expr

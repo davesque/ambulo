@@ -73,7 +73,7 @@ class BaseNode(abc.ABC):
         return self.label
 
     @property
-    def name_expr(self) -> str:
+    def brief_expr(self) -> str:
         return str(self)
 
     @property
