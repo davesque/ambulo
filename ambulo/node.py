@@ -118,8 +118,8 @@ class Node(BaseNode):
             i.outputs.append(self)
 
         self.inputs = inputs
-        self.outputs = []
-        self.label = label
+
+        super().__init__(label)
 
     def eval(self, sess: Session) -> Number:
         if sess.has_value(self):
