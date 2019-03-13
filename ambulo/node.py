@@ -68,7 +68,7 @@ class BaseNode(abc.ABC):
 
     def __str__(self) -> str:
         if self.label is None:
-            return f'{type(self).__name__}(id(self))'
+            return f'{type(self).__name__}(id={id(self)})'
 
         return self.label
 
